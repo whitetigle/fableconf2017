@@ -13,7 +13,12 @@ type CanvasInfo =
 
 let [<Literal>] LifeDec = 0.1
 
+let [<Literal>] Radius = 200.
+
+
 type Particle = {
+  startX:float
+  startY:float
   X:float
   Y:float
   A:float
@@ -63,13 +68,17 @@ let subscribeToFrames dispatch =
 let initModel (canvasinfo:CanvasInfo) =
     let particles =
       [
-        for i in 0..8000 do
+        for i in 0..2000 do
+          let x = Math.random() * canvasinfo.Width
+          let y = Math.random() * canvasinfo.Height
           let p = {
-            X=Math.random() * canvasinfo.Width
-            Y=Math.random() * canvasinfo.Height
+            X=x
+            Y=y
+            startX=x
+            startY=y
             A=0.
             V=0.
-            Life=Math.random() * 100.
+            Life=Math.random() * 1000.
           }
           yield
             p
@@ -86,22 +95,18 @@ let update (msg: Msg) (model: Model) =
     let model =
         match msg with
         | NewFrame ->
-        (*
-    p = particles[_j];
-    v = noise.perlin2(p.x * period, p.y * period);
-    ctx.fillStyle = "hsla(" + (Math.floor(v * 360)) + ", 95%, 20%, 0.05)";
-    ctx.fillRect(p.x, p.y, 1.5, 1.5);
-    p.h++;
-    a = v * 2 * Math.PI + p.a;
-    p.x += Math.cos(a);
-    p.y += Math.sin(a)
-        *)
+
+          // update our particles
           let particles =
             model.Particles
               |> List.map( fun p ->
                 let v = Perlin.perlin2( p.X * 0.00125, p.Y * 0.00125 )
-                let a = v * 2. * Math.PI + p.A
-                {p with X = p.X + Math.cos(a); Y = p.Y + Math.sin(a); V = v; Life = p.Life - LifeDec }
+                let a = p.A + 0.01
+                let y = p.startY + Math.sin(a*2.) * Radius
+                let x = p.startX + Math.sin(a) * Radius * 2.5
+                {p with X = x; Y = y; V = v; A=a; Life = p.Life - LifeDec }
+ //              let a = v * 2. * Math.PI + p.A
+ //              {p with X = p.X + Math.cos(a); Y = p.Y + Math.sin(a); V = v; Life = p.Life - LifeDec }
               )
               |> List.filter( fun p -> p.Life > 0.)
 
