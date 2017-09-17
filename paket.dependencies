@@ -1,0 +1,15 @@
+source https://nuget.org/api/v2
+storage:none
+
+clitool dotnet-fable
+nuget Fable.Core
+nuget Fable.Elmish
+nuget Fable.Elmish.Debugger
+nuget Fable.Import.Browser
+nuget FAKE
+
+// [ FAKE GROUP ]
+group NetcoreBuild
+    source https://nuget.org/api/v2
+
+    nuget Fake.Core.Targets prerelease
