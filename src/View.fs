@@ -7,12 +7,12 @@ open Fable.Core.JsInterop
 open Fable.Import.Browser
 open Fable.Import.JS
 
-let [<Literal>] Radius = 1.5
+let [<Literal>] Ratio = 0.98
 
 let initCanvas() =
     let canvas = document.getElementsByTagName_canvas().[0]
-    canvas.width <- window.innerWidth  * window.devicePixelRatio * 0.9
-    canvas.height <- window.innerHeight * window.devicePixelRatio * 0.9
+    canvas.width <- window.innerWidth  * window.devicePixelRatio * Ratio
+    canvas.height <- window.innerHeight * window.devicePixelRatio * Ratio
     let ctx = canvas.getContext_2d()
 
     Perlin.seed(Math.random())
@@ -33,8 +33,9 @@ let render (model: Model) (dispatch: Msg->unit) =
           ctx.globalCompositeOperation <- "source-over"
 
           // draw text at the center of the screen
-          ctx.font <- "90px Quicksand"
-          ctx.fillStyle <- !^ "rgba(255,255,255,0.8)"
+          let fontSize = model.CanvasInfo.Width / 15.
+          ctx.font <- sprintf "%ipx Quicksand" (int fontSize)
+          ctx.fillStyle <- !^ "rgba(255,255,255,0.7)"
           let textWidth = ctx.measureText(text).width
           ctx.textBaseline <- "middle"
           ctx.fillText( text, model.CanvasInfo.Width * 0.5 - textWidth * 0.5, model.CanvasInfo.Height * 0.5)
@@ -62,14 +63,25 @@ let render (model: Model) (dispatch: Msg->unit) =
                   ctx.fillStyle <- !^ p.Color
                   ctx.fillRect(p.X, p.Y, p.Size, p.Size)
 
-                | BlackWave ->
+                | FableCurtain text ->
                   ctx.clearRect(0.,0.,model.CanvasInfo.Width, p.Y - p.Size*0.5)
 //                  ctx.fillStyle <- !^ "red"
                   ctx.fillStyle <- !^ p.Color
                   ctx.font <- sprintf "%ipx Quicksand" (int p.Size)
-                  let text = "Fable"
                   let textWidth = ctx.measureText(text).width
                   ctx.fillText( text, p.X + model.CanvasInfo.Width * 0.5 - textWidth * 0.5, p.Y)
+
+                | _ -> printfn ""
+                (*
+                | ShowTitle text ->
+
+                  // draw text at the center of the screen
+                  ctx.font <- "90px Quicksand"
+                  ctx.fillStyle <- !^ ( sprintf "rgba(255,255,255,%f)" p.Alpha)
+                  let textWidth = ctx.measureText(text).width
+                  ctx.textBaseline <- "middle"
+                  ctx.fillText( text, model.CanvasInfo.Width * 0.5 - textWidth * 0.5, model.CanvasInfo.Height * 0.5)
+                *)
 
 
               //ctx.save()

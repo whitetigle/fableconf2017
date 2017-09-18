@@ -4,6 +4,7 @@ open System
 open Fable.Core
 open Fable.Import.Browser
 open Fable.Import.JS
+open System.Collections.Generic
 
 type CanvasInfo =
     { Context: CanvasRenderingContext2D
@@ -32,6 +33,7 @@ type Particle = {
   mutable LifeDec:float
   mutable PerlinCoeff:float
   mutable Color:string
+  mutable Alpha:float
 }
 
 
@@ -50,7 +52,8 @@ type ControlKeys =
 type Saturation = int
 type PaintingKind =
   | Flows of Saturation
-  | BlackWave
+  | FableCurtain of string
+  | ShowTitle of string
 
 type Screen =
   | Start
@@ -70,7 +73,7 @@ type Model =
     { Keys: ControlKeys
       Initialized: bool
       X : float
-      Particles : Particle array
+      Particles : Particle []
       Screen : Screen
       Screens : Screen list
       CurrentIndex : int
@@ -232,7 +235,7 @@ let update (msg: Msg) (model: Model) =
                 {model with Particles = particles }
                 *)
 
-              | BlackWave ->
+              | FableCurtain title ->
 
                 let l = model.Particles |> Seq.length
                 for i in 0..(l-1) do
@@ -259,6 +262,17 @@ let update (msg: Msg) (model: Model) =
                   {model with Screen=NextScreen; Particles = [||]; BackgroundAnimation=None }
                 else model
 //                  {model with Particles = particles }
+
+              | ShowTitle title ->
+
+                let l = model.Particles |> Seq.length
+                for i in 0..(l-1) do
+                  let p = model.Particles.[i]
+                  p.Life <- p.Life - p.LifeDec
+                  p.Alpha = if p.Alpha <1.0 then p.Alpha + 0.1 else 1.0
+                  |> ignore
+
+                model
 
             | None -> model
 
@@ -288,20 +302,21 @@ let update (msg: Msg) (model: Model) =
                       startY= -200.
                       A=0.//Math.random() * 1000.
                       V=0.
-                      Life=20.//Math.random() * 1000.
+                      Life=50.//Math.random() * 1000.
                       Speed=ParticleSpeed * 3.0
                       Composition=Top
                       Size=300.
                       LifeDec=0.1
                       PerlinCoeff=1.
                       Color = "rgba(255, 255, 255, 0.05)"
+                      Alpha = 1.0
                     }
                   yield
                     p
 
               |]
 
-            {model with Particles=particles; Screen = DoNothing; BackgroundAnimation=Some BlackWave }
+            {model with Particles=particles; Screen = DoNothing; BackgroundAnimation=Some (FableCurtain "Fable 2017") }
 
           | DoNothing -> model
           | GoNextFrame -> { model with ScreenContent={Text=""}; Screen = DoNothing}
@@ -332,6 +347,7 @@ let update (msg: Msg) (model: Model) =
                         LifeDec=0.01
                         PerlinCoeff=coeff// 0.00125
                         Color=(sprintf "hsla(%f, %i%%, 80%%, 0.06)" (Math.floor(v * 360.)) saturation )
+                        Alpha=1.0
                       }
                       yield
                         p
@@ -340,8 +356,44 @@ let update (msg: Msg) (model: Model) =
 
 
             let sat = int (Math.random() * 100.)
-            {model with Particles=particles; Screen = NextScreen; BackgroundAnimation=Some (Flows sat) }
+            let ps = (model.Particles |> Seq.toList) @ (particles |> Seq.toList)
+            let psa = ps |> Seq.toArray
+
+            {model with Particles=psa; Screen = NextScreen; BackgroundAnimation=Some (Flows sat) }
           | DisplayText text ->
+            (*
+            let particles =
+              let radius = 10
+              let max = (int model.CanvasInfo.Width / radius)
+              [|
+                  let p =
+                    {
+                      X=0.
+                      Y= -200.
+                      startX=0.
+                      startY= -200.
+                      A=0.//Math.random() * 1000.
+                      V=0.
+                      Life=20.//Math.random() * 1000.
+                      Speed=ParticleSpeed * 3.0
+                      Composition=Top
+                      Size=300.
+                      LifeDec=0.5
+                      PerlinCoeff=1.
+                      Color = "rgba(255, 255, 255, 0.05)"
+                      Alpha = 0.01
+                    }
+                  yield
+                    p
+
+              |]
+
+            // TODO: hopefully we can do concat operation way better!!
+            let ps = (model.Particles |> Seq.toList) @ (particles |> Seq.toList)
+            let psa = ps |> Seq.toArray
+            {model with Particles= psa; Screen = DoNothing; BackgroundAnimation=Some (ShowTitle text) }
+            *)
+
             { model with ScreenContent = {model.ScreenContent with Text=text}; Screen = GoNextFrame }
 
         | KeyDown code ->
