@@ -13,7 +13,7 @@ open Elmish.Worker
 let init() =
     let info = View.initCanvas()
 
-    Program.mkProgram (fun () -> State.initModel info) State.update (View.render info)
+    Program.mkProgram (fun () -> State.initModel info) State.update View.render
 //    |> Program.withAnimationWorker
     |> Program.run
 
