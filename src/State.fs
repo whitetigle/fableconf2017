@@ -21,17 +21,17 @@ type Composition =
 type Particle = {
   startX:float
   startY:float
-  X:float
-  Y:float
-  A:float
-  V:float
-  Life:float
-  Speed:float
-  Composition: Composition
-  Size:float
-  LifeDec:float
-  PerlinCoeff:float
-  Color:string
+  mutable X:float
+  mutable Y:float
+  mutable A:float
+  mutable V:float
+  mutable Life:float
+  mutable Speed:float
+  mutable Composition: Composition
+  mutable Size:float
+  mutable LifeDec:float
+  mutable PerlinCoeff:float
+  mutable Color:string
 }
 
 
@@ -70,7 +70,7 @@ type Model =
     { Keys: ControlKeys
       Initialized: bool
       X : float
-      Particles : Particle List
+      Particles : Particle array
       Screen : Screen
       Screens : Screen list
       CurrentIndex : int
@@ -105,42 +105,66 @@ let initModel (canvasinfo:CanvasInfo) =
         { Keys = { Up=false; Left=false; Right=false }
           Initialized = true
           X= 0.
-          Particles=[]
-          Screen = ClearScreen
+          Particles=[||]
+          Screen = Start
           Screens =
             [
+              ClearScreen
+              DisplayText "Hello!"
+              Transition
+
+              ClearScreen
               DisplayText "Disclaimer: no magic inside"
               Transition
+
               ClearScreen
-              DisplayText "Beware: sharing highly personal experience"
+              DisplayText "Sharing my personal experience"
               Transition
+
               ClearScreen
               DisplayText "More time for my kids"
               Transition
+
               ClearScreen
               DisplayText "Game balancing applied to my life"
               Transition
-              DisplayText "My Goals"
+
               ClearScreen
+              DisplayText "My Goals"
               Transition
+
+              ClearScreen
               DisplayText "Current context"
               Transition
+
               ClearScreen
               DisplayText "What I need"
               Transition
+
               ClearScreen
               DisplayText "Since 2014: changes for the best "
               Transition
+
               ClearScreen
               DisplayText "Fable !!"
               Transition
+
               ClearScreen
               DisplayText "10 months later"
               Transition
+
               ClearScreen
               DisplayText "That's all folks!"
               Transition
+
               ClearScreen
+              DisplayText "Thanks!"
+              Transition
+
+              ClearScreen
+              DisplayText "Please, enjoy your meal!"
+              Transition
+
             ]
           CurrentIndex = 0
           ScreenContent = { Text="Hello!"}
@@ -161,19 +185,41 @@ let update (msg: Msg) (model: Model) =
             | Some kind ->
               match kind with
               | Flows saturation->
+
+                let l = model.Particles |> Seq.length
+                for i in 0..(l-1) do
+                  let p = model.Particles.[i]
+                  let coeff = p.PerlinCoeff
+                  let v = Perlin.perlin2( p.X * coeff, p.Y * coeff )
+                  let a = v * 2. * Math.PI + p.A
+                  let color = (sprintf "hsla(%f, %i%%, 80%%, 0.06)" (Math.floor(v * 360.)) saturation )
+                  p.X <- p.X + Math.cos(a) * p.Speed
+                  p.Y <-  p.Y + Math.sin(a) * p.Speed
+                  p.V <- v
+                  p.Life <-  p.Life - p.LifeDec
+                  p.Color <- color
+
+                let particles = model.Particles |> Seq.filter(fun p -> p.Life > 0.)
+                if particles |> Seq.length <=0 then
+                  {model with Particles = [||]; BackgroundAnimation=None }
+                else
+                  model
+
+                (*
+                //drawing eights!!
+                let a = p.A + 0.01
+                let y = p.startY + Math.sin(a*2.) * Radius
+                let x = p.startX + Math.sin(a) * Radius * 2.5
+                {p with X = x; Y = y; V = v; A=a; Life = p.Life - LifeDec }
+                *)
+
+                (*
+                let length = model.Particles
                 let particles =
                   model.Particles
-                    |> List.map( fun p ->
+                    |> Seq.map( fun p ->
                       let coeff = p.PerlinCoeff
                       let v = Perlin.perlin2( p.X * coeff, p.Y * coeff )
-
-                      (*
-                      //drawing eights!!
-                      let a = p.A + 0.01
-                      let y = p.startY + Math.sin(a*2.) * Radius
-                      let x = p.startX + Math.sin(a) * Radius * 2.5
-                      {p with X = x; Y = y; V = v; A=a; Life = p.Life - LifeDec }
-                      *)
 
                       // waves
                       // source: https://josephg.com/perlin/3/p.js
@@ -181,11 +227,24 @@ let update (msg: Msg) (model: Model) =
                       let color = (sprintf "hsla(%f, %i%%, 80%%, 0.06)" (Math.floor(v * 360.)) saturation )
                       {p with X = p.X + Math.cos(a) * p.Speed; Y = p.Y + Math.sin(a) * p.Speed; V = v; Life = p.Life - p.LifeDec; Color=color }
                     )
-                    |> List.filter( fun p -> p.Life > 0.)
+                    |> Seq.filter( fun p -> p.Life > 0.)
+                    |> Seq.toArray
                 {model with Particles = particles }
+                *)
 
               | BlackWave ->
 
+                let l = model.Particles |> Seq.length
+                for i in 0..(l-1) do
+                  let p = model.Particles.[i]
+                  let a = p.A + p.Speed
+                  p.X <- p.startX + Math.cos(a) * 3.0
+                  p.Y <- p.Y + p.Speed
+                  p.Life <- p.Life - p.LifeDec
+                  p.A = a
+                  |> ignore
+
+                (*
                 let particles =
                   model.Particles
                     |> List.map( fun p ->
@@ -194,11 +253,12 @@ let update (msg: Msg) (model: Model) =
 //                      {p with X = p.X + p.Speed; A=a; Y = p.startY; V = v; Life = p.Life - LifeDec;}
                     )
                     |> List.filter( fun p -> p.Life > 0.)
-
-                if particles.IsEmpty then
-                  {model with Screen=NextScreen; Particles = []; BackgroundAnimation=None }
-                else
-                  {model with Particles = particles }
+                *)
+                let particles = model.Particles |> Seq.filter(fun p -> p.Life > 0.)
+                if particles |> Seq.length <=0 then
+                  {model with Screen=NextScreen; Particles = [||]; BackgroundAnimation=None }
+                else model
+//                  {model with Particles = particles }
 
             | None -> model
 
@@ -211,7 +271,7 @@ let update (msg: Msg) (model: Model) =
 
           | ClearScreen ->
             let sat = int (Math.random() * 100.)
-            {model with Screen = LaunchPainting (Flows sat);}
+            {model with Screen = LaunchPainting (Flows sat); Particles = [||]}
 
           | Start -> model
 
@@ -219,26 +279,27 @@ let update (msg: Msg) (model: Model) =
             let particles =
               let radius = 10
               let max = (int model.CanvasInfo.Width / radius)
-              [
-                let p =
-                  {
-                    X=0.
-                    Y= -200.
-                    startX=0.
-                    startY= -200.
-                    A=0.//Math.random() * 1000.
-                    V=0.
-                    Life=20.//Math.random() * 1000.
-                    Speed=ParticleSpeed * 3.0
-                    Composition=Top
-                    Size=300.
-                    LifeDec=0.1
-                    PerlinCoeff=1.
-                    Color = "rgba(255, 255, 255, 0.05)"
-                  }
-                yield
-                  p
-              ]
+              [|
+                  let p =
+                    {
+                      X=0.
+                      Y= -200.
+                      startX=0.
+                      startY= -200.
+                      A=0.//Math.random() * 1000.
+                      V=0.
+                      Life=20.//Math.random() * 1000.
+                      Speed=ParticleSpeed * 3.0
+                      Composition=Top
+                      Size=300.
+                      LifeDec=0.1
+                      PerlinCoeff=1.
+                      Color = "rgba(255, 255, 255, 0.05)"
+                    }
+                  yield
+                    p
+
+              |]
 
             {model with Particles=particles; Screen = DoNothing; BackgroundAnimation=Some BlackWave }
 
@@ -252,7 +313,7 @@ let update (msg: Msg) (model: Model) =
                   let coeff = (100. + 100. * Math.random()) * 0.00001
                   //let coeff = 0.00125
                   printfn "%f" coeff
-                  [
+                  [|
                     for i in 0..10000 do
                       let x = Math.random() * model.CanvasInfo.Width
                       let y = Math.random() * model.CanvasInfo.Height
@@ -264,7 +325,7 @@ let update (msg: Msg) (model: Model) =
                         startY=y
                         A=0.//Math.random() * 1000.
                         V=0.
-                        Life=50.//Math.random() * 1000.
+                        Life=10.//Math.random() * 1000.
                         Speed=ParticleSpeed
                         Composition=Bottom
                         Size=1.5
@@ -274,12 +335,12 @@ let update (msg: Msg) (model: Model) =
                       }
                       yield
                         p
-                  ]
-              | _ -> []
+                  |]
+              | _ -> [||]
 
 
             let sat = int (Math.random() * 100.)
-            {model with Particles=model.Particles @ particles; Screen = GoNextFrame; BackgroundAnimation=Some (Flows sat) }
+            {model with Particles=particles; Screen = NextScreen; BackgroundAnimation=Some (Flows sat) }
           | DisplayText text ->
             { model with ScreenContent = {model.ScreenContent with Text=text}; Screen = GoNextFrame }
 

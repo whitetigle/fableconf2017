@@ -44,7 +44,7 @@ let render (model: Model) (dispatch: Msg->unit) =
         | _ ->
 
           model.Particles
-            |> List.iter( fun p ->
+            |> Seq.iter( fun p ->
               //ctx.fillStyle <- !^ "red"
               match p.Composition with
               | Top ->

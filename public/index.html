@@ -39,10 +39,22 @@
     body {
       background-color: #eee;
     }
+    .Aligner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .Aligner-item {
+      max-width: 50%;
+    }
+    #title {
+      color: white;
+    }
     </style>
 </head>
 <body>
   <div class='centerbox'>
+    <div class="Aligner"><div id="title"/></div>
     <canvas align="center" id="canvas"></canvas>
   </div>
   <script src="perlin.js"></script>
