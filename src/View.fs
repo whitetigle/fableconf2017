@@ -8,59 +8,82 @@ open Fable.Import.Browser
 open Fable.Import.JS
 
 let [<Literal>] Ratio = 1.0 // full screen
+let [<Literal>] BaseWidth = 1920.
 
 let initCanvas() =
 
-    let drawingCanvas = document.getElementsByTagName_canvas().[0]
-    drawingCanvas.width <- window.innerWidth  * window.devicePixelRatio * Ratio
-    drawingCanvas.height <- window.innerHeight * window.devicePixelRatio * Ratio
-    let ctx = drawingCanvas.getContext_2d()
-
-    let textCanvas = document.getElementsByTagName_canvas().[1]
-    textCanvas.width <- drawingCanvas.width
-    textCanvas.height <- drawingCanvas.height
-    let tctx = textCanvas.getContext_2d()
-
+    // initialise our Perlin noise
     Perlin.seed(Math.random())
 
+    let width = window.innerWidth  * window.devicePixelRatio * Ratio
+    let height = window.innerHeight * window.devicePixelRatio * Ratio
+
+    let drawingCanvas = document.getElementById("drawingcanvas") :?> HTMLCanvasElement
+    drawingCanvas.width <- width
+    drawingCanvas.height <- height
+
+    let textCanvas = document.getElementById("textcanvas") :?> HTMLCanvasElement
+    textCanvas.width <- width
+    textCanvas.height <- height
+
     {
-      TextContext = tctx
-      DrawingContext = ctx
-      Width = drawingCanvas.width
-      Height = drawingCanvas.height
+      TextContext = textCanvas.getContext_2d()
+      DrawingContext = drawingCanvas.getContext_2d()
+      Width = width
+      Height = height
+      ScaleFactor = width / BaseWidth
     }
 
 let render (model: Model) (dispatch: Msg->unit) =
-    if model.Initialized then
 
-        match model.Screen with
-        | DisplayText text ->
+  let fontToRatio size =
+    sprintf "%ipx Quicksand" (int (size * model.CanvasInfo.ScaleFactor))
 
-          let ctx = model.CanvasInfo.TextContext
+  if model.Initialized then
 
-          // draw text on top
+      match model.Screen with
+//        | DisplayText text ->
+
+        //let ctx = model.CanvasInfo.TextContext
+
+        // draw text on top
 //          ctx.globalCompositeOperation <- "source-over"
 
-          // draw text at the center of the screen
-          let fontSize = model.CanvasInfo.Width / 15.
-          ctx.font <- sprintf "%ipx Quicksand" (int fontSize)
-          ctx.fillStyle <- !^ "rgba(255,255,255,0.7)"
-          let textWidth = ctx.measureText(text).width
-          ctx.textBaseline <- "middle"
-          ctx.fillText( text, model.CanvasInfo.Width * 0.5 - textWidth * 0.5, model.CanvasInfo.Height * 0.5)
+        // draw text at the center of the screen
+        (*
+        let fontSize = model.CanvasInfo.Width / 15.
+        ctx.font <- sprintf "%ipx Quicksand" (int fontSize)
+        ctx.fillStyle <- !^ "rgba(255,255,255,0.7)"
+        let textWidth = ctx.measureText(text).width
+        ctx.textBaseline <- "middle"
+        ctx.fillText( text, model.CanvasInfo.Width * 0.5 - textWidth * 0.5, model.CanvasInfo.Height * 0.5)
+        *)
 
-        | ClearScreen ->
+      | ClearScreen which ->
 
-          let ctx = model.CanvasInfo.TextContext
+        match which with
+        | TopScreen ->
+          let ctx = model.CanvasInfo.TextContext//
           ctx.clearRect(0.,0.,model.CanvasInfo.Width, model.CanvasInfo.Height)
 
-        | _ ->
+        | BottomScreen ->
+          let ctx = model.CanvasInfo.DrawingContext//
+          ctx.clearRect(0.,0.,model.CanvasInfo.Width, model.CanvasInfo.Height)
 
-          let ctx = model.CanvasInfo.DrawingContext
+      | _ ->
 
-          model.Particles
-            |> Seq.iter( fun p ->
-              //ctx.fillStyle <- !^ "red"
+
+        model.BottomParticles
+          |> Seq.iter( fun p ->
+            //ctx.fillStyle <- !^ "red"
+            (*
+              *)
+
+            // dynamic color using perlin noise
+            if model.BackgroundAnimation.IsSome then
+              let kind = model.BackgroundAnimation.Value
+              let ctx = model.CanvasInfo.DrawingContext
+
               match p.Composition with
               | Top ->
                 // play anim on top of everything
@@ -69,37 +92,71 @@ let render (model: Model) (dispatch: Msg->unit) =
                 // play anim at the back
                 ctx.globalCompositeOperation <- "destination-over"
 
-              // dynamic color using perlin noise
-              if model.BackgroundAnimation.IsSome then
-                let kind = model.BackgroundAnimation.Value
-                match kind with
-                | Flows sat ->
-                  ctx.fillStyle <- !^ p.Color
-                  ctx.fillRect(p.X, p.Y, p.Size, p.Size)
+              match kind with
+              | Flows sat ->
 
-                | FableCurtain text ->
-                  ctx.clearRect(0.,0.,model.CanvasInfo.Width, p.Y - p.Size*0.5)
-//                  ctx.fillStyle <- !^ "red"
-                  ctx.fillStyle <- !^ p.Color
-                  ctx.font <- sprintf "%ipx Quicksand" (int p.Size)
-                  let textWidth = ctx.measureText(text).width
-                  ctx.fillText( text, p.X + model.CanvasInfo.Width * 0.5 - textWidth * 0.5, p.Y)
-
-                | _ -> printfn ""
+                ctx.fillStyle <- !^ p.Color
+                ctx.fillRect(p.X, p.Y, p.Size, p.Size)
                 (*
-                | ShowTitle text ->
 
-                  // draw text at the center of the screen
-                  ctx.font <- "90px Quicksand"
-                  ctx.fillStyle <- !^ ( sprintf "rgba(255,255,255,%f)" p.Alpha)
-                  let textWidth = ctx.measureText(text).width
-                  ctx.textBaseline <- "middle"
-                  ctx.fillText( text, model.CanvasInfo.Width * 0.5 - textWidth * 0.5, model.CanvasInfo.Height * 0.5)
+              | FableCurtain ->
+
+                let ctx = model.CanvasInfo.DrawingContext
+                ctx.clearRect(0.,0.,model.CanvasInfo.Width, p.Y - p.Size*0.5)
+//                  ctx.fillStyle <- !^ "red"
+                ctx.fillStyle <- !^ p.Color
+                ctx.font <- fontToRatio p.Size
+                let textWidth = ctx.measureText(p.Text).width
+                ctx.fillText( p.Text, p.X + model.CanvasInfo.Width * 0.5 - textWidth * 0.5, p.Y)
                 *)
 
 
-              //ctx.save()
-            )
+              | _ -> printfn ""
+          )
+
+        if model.TopAnimation.IsSome then
+          let ctx = model.CanvasInfo.TextContext
+          model.TopParticles
+            |> Seq.iter( fun p ->
+
+                let kind = model.TopAnimation.Value
+                match kind with
+                | ShowTitle ->
+
+                  // draw text at the center of the screen
+                  ctx.font <- fontToRatio p.Size
+  //                ctx.fillStyle <- !^ ( sprintf "rgba(255,255,255,%f)" p.Alpha)
+                  let color = ( sprintf "rgba(255,255,255,%f)" p.Alpha)
+                  printfn "%s" color
+                  ctx.fillStyle <- !^ color
+                  let textWidth = ctx.measureText(p.Text).width
+                  ctx.textBaseline <- "middle"
+                  let x = model.CanvasInfo.Width * 0.5 - textWidth * 0.5
+                  let y = model.CanvasInfo.Height * 0.5
+                  let height = 500.
+                  let mid = height * 0.5
+                  ctx.clearRect(x,y - mid,textWidth, height)
+                  ctx.fillText( p.Text, x, y)
+
+                | TextLabel ->
+
+                  // draw text at the center of the screen
+                  ctx.font <- fontToRatio p.Size
+                  let color = ( sprintf "rgba(255,255,255,%f)" p.Alpha)
+                  ctx.fillStyle <- !^ color
+                  let textWidth = ctx.measureText(p.Text).width
+                  ctx.textBaseline <- "middle"
+                  let x = model.CanvasInfo.Width * 0.5 - textWidth * 0.5
+                  let y = model.CanvasInfo.Height * 0.5
+                  let height = p.Size * 1.1
+  //                let mid = height * 0.5
+                  ctx.fillStyle <- !^ "rgba(255,255,255,0.7)"
+                  ctx.fillRect(p.X, p.Y - height * 0.5, textWidth, height);
+                  ctx.fillStyle <- !^ "black"
+                  ctx.fillText( p.Text, p.X, p.Y)
+
+                | _ -> printfn ""
+          )
 
 
 

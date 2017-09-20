@@ -12,6 +12,7 @@ type CanvasInfo =
       DrawingContext: CanvasRenderingContext2D
       Width: float
       Height: float
+      ScaleFactor: float
     }
 
 let [<Literal>] Radius = 200.
@@ -36,8 +37,27 @@ type Particle = {
   mutable PerlinCoeff:float
   mutable Color:string
   mutable Alpha:float
+  Text: string
 }
 
+let EmptyParticle =
+  {
+    X=0.
+    Y= 0.
+    startX=0.
+    startY=0.
+    A=0.
+    V=0.
+    Life=0.
+    Speed=0.
+    Composition=Top
+    Size=0.
+    LifeDec=0.
+    PerlinCoeff=0.
+    Color = ""
+    Alpha = 0.
+    Text = ""
+  }
 
 [<RequireQualifiedAccess>]
 module Keys =
@@ -54,22 +74,34 @@ type ControlKeys =
 type Saturation = int
 type PaintingKind =
   | Flows of Saturation
-  | FableCurtain of string
-  | ShowTitle of string
+  | FableCurtain
+  | ShowTitle
+  | TextLabel
 
 type Text = string
 type Probability = float
 
+type Layer = {
+  Context : CanvasRenderingContext2D
+  Animation : PaintingKind option
+  Particles : Particle []
+}
+
+type ScreenLayer =
+  | TopScreen
+  | BottomScreen
+
 type Screen =
   | Start
-  | Transition
+  | StartBackground
   | DisplayText of string
+  | AddLabel of string
   | LaunchPainting of PaintingKind
   | DoNothing
   | GoNextFrame
-  | ClearScreen
+  | ClearScreen of ScreenLayer
   | NextScreen
-  | PopText of (Text*Probability) list
+  | PopText of (Text*Probability) []
 
 type ScreenContent = {
   Text: string
@@ -79,13 +111,15 @@ type Model =
     { Keys: ControlKeys
       Initialized: bool
       X : float
-      Particles : Particle []
+      BottomParticles : Particle []
+      TopParticles : Particle []
       Screen : Screen
       Screens : Screen list
       CurrentIndex : int
       ScreenContent: ScreenContent
       CanvasInfo : CanvasInfo
       BackgroundAnimation: PaintingKind option
+      TopAnimation: PaintingKind option
     }
 
 type Msg =
@@ -115,22 +149,128 @@ let subscribeToFrames dispatch =
     run 0.0
 
 let initModel (canvasinfo:CanvasInfo) =
+    let chapters =
+      [
+        ["Hello!"]
+      ]
     let model =
         { Keys = { Up=false; Left=false; Right=false }
           Initialized = true
           X= 0.
-          Particles=[||]
+          BottomParticles=[||]
+          TopParticles=[||]
           Screen = Start
           Screens =
             [
-              ClearScreen
+              ClearScreen BottomScreen
               DisplayText "Hello!"
-              Transition
+              ClearScreen TopScreen
+              DisplayText "François"
+              ClearScreen TopScreen
+              AddLabel "Full"
+              AddLabel "Stack"
+              AddLabel "Developer"
 
-              ClearScreen
-              DisplayText "Disclaimer: no magic inside"
-              Transition
+              ClearScreen TopScreen
+              DisplayText "Goal: time with my kids!"
 
+              ClearScreen TopScreen
+              DisplayText "I want so many things!"
+
+              ClearScreen TopScreen
+              AddLabel "A good job"
+              AddLabel "Work with great people"
+              AddLabel "On interesting projects"
+              AddLabel "Keep learning"
+              AddLabel "Teach as well"
+              AddLabel "Earn enough money"
+              AddLabel "But also..."
+              AddLabel "Enjoy time with my family"
+              AddLabel "Hang out with Friends"
+              AddLabel "just"
+              AddLabel "BE"
+              AddLabel "ABLE"
+              AddLabel "TO"
+              AddLabel "ENJOY"
+              AddLabel "MY LIFE"
+              ClearScreen TopScreen
+
+              DisplayText "Yes. Very personal goals."
+
+              ClearScreen BottomScreen
+              DisplayText "How could I reach them?"
+              AddLabel "oh no..."
+              AddLabel "he's going to do it!"
+              AddLabel "Talking about himself!"
+
+              ClearScreen TopScreen
+              DisplayText "Indeed!"
+              AddLabel "short personal Story"
+
+              ClearScreen BottomScreen
+              ClearScreen TopScreen
+              DisplayText "2000-2007"
+              ClearScreen TopScreen
+              DisplayText "Before I got kids"
+              AddLabel "Worked a lot"
+              AddLabel "Worked a lot"
+              AddLabel "Developed Video Games!"
+              AddLabel "Learnt a lot"
+              AddLabel "Met great people"
+              AddLabel "and eventually..."
+
+              ClearScreen TopScreen
+              DisplayText "2007-2010"
+              ClearScreen TopScreen
+              DisplayText "Enter Kids!"
+              AddLabel "Worked a lot"
+              AddLabel "made some crazy money"
+              AddLabel "Worked a lot"
+              AddLabel "Made more Video Games!"
+              AddLabel "Worked a lot"
+              ClearScreen TopScreen
+              AddLabel "Kids?"
+              AddLabel "Sorry honey..."
+              AddLabel "Too much things to do..."
+              AddLabel "Failure"
+              AddLabel "Failure"
+
+              ClearScreen BottomScreen
+              DisplayText "Failure?"
+              ClearScreen TopScreen
+              DisplayText "2010-2011"
+              ClearScreen TopScreen
+              DisplayText "Enter one more kid"
+              ClearScreen TopScreen
+              DisplayText "Bye Bye Great Job"
+              AddLabel "Family"
+              AddLabel "Kids"
+              AddLabel "Friends"
+              AddLabel "Enjoying life"
+              AddLabel "BUT"
+              AddLabel "no incomes"
+
+              ClearScreen BottomScreen
+              DisplayText "2011-2014"
+              ClearScreen TopScreen
+              DisplayText "Startup!"
+              AddLabel "Let's do it"
+              AddLabel "Make video games again!"
+              AddLabel "sell them!"
+              AddLabel "get rich!"
+              AddLabel "but take time"
+              AddLabel "with my family"
+              AddLabel "..."
+              ClearScreen TopScreen
+              DisplayText "Economic failure"
+              ClearScreen TopScreen
+
+
+              ClearScreen TopScreen
+              DisplayText "I want so many things!"
+
+
+              (*
               ClearScreen
               DisplayText "Sharing my personal experience"
               Transition
@@ -178,12 +318,14 @@ let initModel (canvasinfo:CanvasInfo) =
               ClearScreen
               DisplayText "Please, enjoy your meal!"
               Transition
+              *)
 
             ]
           CurrentIndex = 0
           ScreenContent = { Text="Hello!"}
           CanvasInfo=canvasinfo
           BackgroundAnimation = None
+          TopAnimation = None
         }
     model, [subscribeToFrames; subscribeToResize; subscribeToMouseClickEvents]
 //    model, [subscribeToKeyEvents; subscribeToFrames; subscribeToResize; subscribeToMouseClickEvents]
@@ -204,9 +346,9 @@ let update (msg: Msg) (model: Model) =
             match kind with
             | Flows saturation->
 
-              let l = model.Particles |> Seq.length
+              let l = model.BottomParticles |> Seq.length
               for i in 0..(l-1) do
-                let p = model.Particles.[i]
+                let p = model.BottomParticles.[i]
                 let coeff = p.PerlinCoeff
                 let v = Perlin.perlin2( p.X * coeff, p.Y * coeff )
                 let a = v * 2. * Math.PI + p.A
@@ -217,9 +359,9 @@ let update (msg: Msg) (model: Model) =
                 p.Life <-  p.Life - p.LifeDec
                 p.Color <- color
 
-              let particles = model.Particles |> Seq.filter(fun p -> p.Life > 0.)
+              let particles = model.BottomParticles |> Seq.filter(fun p -> p.Life > 0.)
               if particles |> Seq.length <=0 then
-                {model with Particles = [||]; BackgroundAnimation=None }
+                {model with BottomParticles = [||]; BackgroundAnimation=None }
               else
                 model
 
@@ -250,17 +392,16 @@ let update (msg: Msg) (model: Model) =
               {model with Particles = particles }
               *)
 
-            | FableCurtain title ->
+            | FableCurtain ->
 
-              let l = model.Particles |> Seq.length
+              let l = model.BottomParticles |> Seq.length
               for i in 0..(l-1) do
-                let p = model.Particles.[i]
+                let p = model.BottomParticles.[i]
                 let a = p.A + p.Speed
                 p.X <- p.startX + Math.cos(a) * 3.0
                 p.Y <- p.Y + p.Speed
                 p.Life <- p.Life - p.LifeDec
-                p.A = a
-                |> ignore
+                p.A <- a
 
               (*
               let particles =
@@ -272,23 +413,47 @@ let update (msg: Msg) (model: Model) =
                   )
                   |> List.filter( fun p -> p.Life > 0.)
               *)
-              let particles = model.Particles |> Seq.filter(fun p -> p.Life > 0.)
+              let particles = model.BottomParticles |> Seq.filter(fun p -> p.Life > 0.)
               if particles |> Seq.length <=0 then
-                {model with Screen=NextScreen; Particles = [||]; BackgroundAnimation=None }
+                {model with Screen=NextScreen; BottomParticles = [||]; BackgroundAnimation=None }
               else model
 //                  {model with Particles = particles }
 
-            | ShowTitle title ->
+          | None -> model
 
-              let l = model.Particles |> Seq.length
+        let model =
+          match model.TopAnimation with
+          | Some kind ->
+            match kind with
+            | ShowTitle  ->
+
+              let l = model.TopParticles |> Seq.length
               for i in 0..(l-1) do
-                let p = model.Particles.[i]
-                p.Life <- p.Life - p.LifeDec
-                p.Alpha = if p.Alpha <1.0 then p.Alpha + 0.1 else 1.0
-                |> ignore
+                let p = model.TopParticles.[i]
+                let alpha = if p.Alpha <=1.0 then p.Alpha + p.LifeDec else 1.0
+                p.Alpha <- alpha
+                if p.Alpha >= 1.0 then p.Life <- -1.0
 
-              model
+              let particles = model.TopParticles |> Seq.filter(fun p -> p.Life >= 0.)
+              if particles |> Seq.length <=0 then
+                {model with TopParticles = [||]; TopAnimation=None }
+              else model
 
+            | TextLabel  ->
+
+              let l = model.TopParticles |> Seq.length
+              for i in 0..(l-1) do
+                let p = model.TopParticles.[i]
+                let alpha = if p.Alpha <=1.0 then p.Alpha + p.LifeDec else 1.0
+                p.Alpha <- alpha
+                if p.Alpha >= 1.0 then p.Life <- -1.0
+
+              let particles = model.TopParticles |> Seq.filter(fun p -> p.Life >= 0.)
+              if particles |> Seq.length <=0 then
+                {model with TopParticles = [||]; TopAnimation=None }
+              else model
+
+            |  _ -> model
           | None -> model
 
         printfn "%A" model.Screen
@@ -298,40 +463,18 @@ let update (msg: Msg) (model: Model) =
             let screen = model.Screens.[model.CurrentIndex]
             {model with Screen=screen; CurrentIndex = model.CurrentIndex + 1}
 
-        | ClearScreen ->
-          let sat = int (Math.random() * 100.)
-          {model with Screen = LaunchPainting (Flows sat); Particles = [||]}
+        | ClearScreen which->
+          match which with
+          | TopScreen ->
+            {model with Screen = DoNothing; TopParticles = [||]}
+          | BottomScreen ->
+            {model with Screen = StartBackground; BottomParticles = [||]}
 
         | Start -> model
 
-        | Transition ->
-          let particles =
-            let radius = 10
-            let max = (int model.CanvasInfo.Width / radius)
-            [|
-                let p =
-                  {
-                    X=0.
-                    Y= -200.
-                    startX=0.
-                    startY= -200.
-                    A=0.//Math.random() * 1000.
-                    V=0.
-                    Life=50.//Math.random() * 1000.
-                    Speed=ParticleSpeed * 3.0
-                    Composition=Top
-                    Size=300.
-                    LifeDec=0.1
-                    PerlinCoeff=1.
-                    Color = "rgba(255, 255, 255, 0.05)"
-                    Alpha = 1.0
-                  }
-                yield
-                  p
-
-            |]
-
-          {model with Particles=particles; Screen = DoNothing; BackgroundAnimation=Some (FableCurtain "Fable 2017") }
+        | StartBackground ->
+          let sat = int (Math.random() * 100.)
+          {model with Screen = LaunchPainting (Flows sat); BackgroundAnimation=None }
 
         | DoNothing -> model
         | GoNextFrame -> { model with ScreenContent={Text=""}; Screen = DoNothing}
@@ -363,6 +506,7 @@ let update (msg: Msg) (model: Model) =
                       PerlinCoeff=coeff// 0.00125
                       Color=(sprintf "hsla(%f, %i%%, 80%%, 0.06)" (Math.floor(v * 360.)) saturation )
                       Alpha=1.0
+                      Text = ""
                     }
                     yield
                       p
@@ -371,45 +515,59 @@ let update (msg: Msg) (model: Model) =
 
 
           let sat = int (Math.random() * 100.)
-          let ps = (model.Particles |> Seq.toList) @ (particles |> Seq.toList)
+          let ps = (model.BottomParticles |> Seq.toList) @ (particles |> Seq.toList)
           let psa = ps |> Seq.toArray
 
-          {model with Particles=psa; Screen = NextScreen; BackgroundAnimation=Some (Flows sat) }
+          {model with BottomParticles=psa; Screen = NextScreen; BackgroundAnimation=Some (Flows sat) }
         | DisplayText text ->
-          (*
-          let particles =
-            let radius = 10
-            let max = (int model.CanvasInfo.Width / radius)
-            [|
-                let p =
-                  {
-                    X=0.
-                    Y= -200.
-                    startX=0.
-                    startY= -200.
-                    A=0.//Math.random() * 1000.
-                    V=0.
-                    Life=20.//Math.random() * 1000.
-                    Speed=ParticleSpeed * 3.0
-                    Composition=Top
-                    Size=300.
-                    LifeDec=0.5
-                    PerlinCoeff=1.
-                    Color = "rgba(255, 255, 255, 0.05)"
-                    Alpha = 0.01
-                  }
-                yield
-                  p
 
+          let particles =
+            [|
+                { EmptyParticle with LifeDec=0.1;Alpha=0.1; Size=90.; Text=text }
             |]
 
           // TODO: hopefully we can do concat operation way better!!
-          let ps = (model.Particles |> Seq.toList) @ (particles |> Seq.toList)
+          let ps = (model.TopParticles |> Seq.toList) @ (particles |> Seq.toList)
           let psa = ps |> Seq.toArray
-          {model with Particles= psa; Screen = DoNothing; BackgroundAnimation=Some (ShowTitle text) }
-          *)
+          {model with TopParticles= psa; Screen = DoNothing; TopAnimation=Some ShowTitle }
 
-          { model with ScreenContent = {model.ScreenContent with Text=text}; Screen = GoNextFrame }
+        | AddLabel text ->
+
+          let xmargin = model.CanvasInfo.Width * 0.2
+          let ymargin = model.CanvasInfo.Height * 0.2
+          let x = xmargin + ( model.CanvasInfo.Width - xmargin * 2.) * Math.random()
+          let y = ymargin + ( model.CanvasInfo.Height - ymargin * 2.) * Math.random()
+          let particles =
+            [|
+                { EmptyParticle with LifeDec=0.1; Alpha=0.1; Size=50.; Text=text; X=x;Y=y }
+            |]
+
+          // TODO: hopefully we can do concat operation way better!!
+          let ps = (model.TopParticles |> Seq.toList) @ (particles |> Seq.toList)
+          let psa = ps |> Seq.toArray
+          {model with TopParticles= psa; Screen = DoNothing; TopAnimation=Some TextLabel }
+
+        | PopText data ->
+
+          let particles =
+            [|
+              for i in 0..100 do
+                let rnd = System.Random()
+                let next = data.[rnd.Next(data.Length)]
+                let text = fst next
+                let x = model.CanvasInfo.Width * Math.random()
+                let y = model.CanvasInfo.Height * Math.random()
+                let p = { EmptyParticle with Life=Math.random() * 100.; LifeDec=0.1;Alpha=0.0; Size=50.; Text=text; X=x;Y=y }
+                yield p
+            |]
+
+          // TODO: hopefully we can do concat operation way better!!
+          let ps = (model.TopParticles |> Seq.toList) @ (particles |> Seq.toList)
+          let psa = ps |> Seq.toArray
+          {model with TopParticles= psa; Screen = DoNothing; TopAnimation=Some TextLabel }
+
+
+//          { model with ScreenContent = {model.ScreenContent with Text=text}; Screen = GoNextFrame }
 
       | OnClick -> proceedToNextScreen
 
