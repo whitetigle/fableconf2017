@@ -171,9 +171,22 @@ let initModel (canvasinfo:CanvasInfo) =
               AddLabel "Stack"
               AddLabel "Developer"
 
+              ClearScreen BottomScreen
               ClearScreen TopScreen
-              DisplayText "Goal: time with my kids!"
+              DisplayText "Time with my kids!"
+              ClearScreen TopScreen
+              AddLabel "A few years ago..."
+              AddLabel "kids: want to play daddy?"
+              AddLabel "Me: no. Too tired."
+              AddLabel "kids: later maybe?"
+              AddLabel "Me: I don't know. Ask your Mum!"
+              AddLabel "kids: ok..."
+              ClearScreen TopScreen
+              AddLabel "..."
+              AddLabel "..."
+              AddLabel "ok, let's start our story."
 
+              ClearScreen BottomScreen
               ClearScreen TopScreen
               DisplayText "I want so many things!"
 
@@ -187,7 +200,8 @@ let initModel (canvasinfo:CanvasInfo) =
               AddLabel "But also..."
               AddLabel "Enjoy time with my family"
               AddLabel "Hang out with Friends"
-              AddLabel "just"
+              ClearScreen TopScreen
+              AddLabel "JUST"
               AddLabel "BE"
               AddLabel "ABLE"
               AddLabel "TO"
@@ -202,16 +216,14 @@ let initModel (canvasinfo:CanvasInfo) =
               AddLabel "oh no..."
               AddLabel "he's going to do it!"
               AddLabel "Talking about himself!"
-
-              ClearScreen TopScreen
-              DisplayText "Indeed!"
-              AddLabel "short personal Story"
+              AddLabel "Indeed!"
 
               ClearScreen BottomScreen
               ClearScreen TopScreen
               DisplayText "2000-2007"
               ClearScreen TopScreen
               DisplayText "Before I got kids"
+              ClearScreen TopScreen
               AddLabel "Worked a lot"
               AddLabel "Worked a lot"
               AddLabel "Developed Video Games!"
@@ -223,7 +235,8 @@ let initModel (canvasinfo:CanvasInfo) =
               ClearScreen TopScreen
               DisplayText "2007-2010"
               ClearScreen TopScreen
-              DisplayText "Enter Kids!"
+              DisplayText "Got Kids!"
+              ClearScreen TopScreen
               AddLabel "Worked a lot"
               AddLabel "made some crazy money"
               AddLabel "Worked a lot"
@@ -246,6 +259,7 @@ let initModel (canvasinfo:CanvasInfo) =
               DisplayText "Enter one more kid"
               ClearScreen TopScreen
               DisplayText "Bye Bye Great Job"
+              ClearScreen TopScreen
               AddLabel "Family"
               AddLabel "Kids"
               AddLabel "Friends"
@@ -258,6 +272,7 @@ let initModel (canvasinfo:CanvasInfo) =
               DisplayText "2011-2014"
               ClearScreen TopScreen
               DisplayText "Startup!"
+              ClearScreen TopScreen
               AddLabel "Let's do it!"
               AddLabel "Make video games again!"
               AddLabel "Indie video Games!"
@@ -308,12 +323,14 @@ let initModel (canvasinfo:CanvasInfo) =
               AddLabel "Still fond of being a developer"
               ClearScreen TopScreen
               DisplayText "THINK & WORK BETTER"
+              ClearScreen TopScreen
               AddLabel "Avoid vapor-projects"
               AddLabel "Avoid projects with shallow requirements"
               AddLabel "9 months max for any project"
               AddLabel "be ready for any project"
               ClearScreen TopScreen
               DisplayText "DEVELOP"
+              ClearScreen TopScreen
               AddLabel "Way Faster!"
               AddLabel "Way Safer!"
               AddLabel "Stable!"
@@ -391,6 +408,7 @@ let initModel (canvasinfo:CanvasInfo) =
               AddLabel "Excellent documentation"
               ClearScreen TopScreen
               DisplayText "NO SEMICOLONS!"
+              ClearScreen TopScreen
               AddLabel "crossplatform"
               AddLabel ".NET"
               AddLabel "JS"
@@ -468,7 +486,7 @@ let initModel (canvasinfo:CanvasInfo) =
               AddLabel "Backed up by awesome people"
               ClearScreen TopScreen
               AddLabel "Me: ok kids, let's play together"
-              AddLabel "kids: you've finished your work already?"
+              AddLabel "kids: finished your work, already?"
               AddLabel "Me: yes."
               ClearScreen TopScreen
               DisplayText "It's ready"
@@ -748,8 +766,8 @@ let update (msg: Msg) (model: Model) =
 
           let xmargin = model.CanvasInfo.Width * 0.2
           let ymargin = model.CanvasInfo.Height * 0.2
-          let x = xmargin + ( model.CanvasInfo.Width - xmargin * 2.) * Math.random()
-          let y = ymargin + ( model.CanvasInfo.Height - ymargin * 2.) * Math.random()
+          let x = ( model.CanvasInfo.Width * 0.5) * Math.random()
+          let y = ( model.CanvasInfo.Height - ymargin * 2.) * Math.random()
           let particles =
             [|
                 { EmptyParticle with LifeDec=0.1; Alpha=0.1; Size=90.; Text=text; X=x;Y=y }

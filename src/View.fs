@@ -142,15 +142,11 @@ let render (model: Model) (dispatch: Msg->unit) =
 
                   // draw text at the center of the screen
                   ctx.font <- fontToRatio p.Size
-                  let color = ( sprintf "rgba(255,255,255,%f)" p.Alpha)
-                  ctx.fillStyle <- !^ color
                   let textWidth = ctx.measureText(p.Text).width
                   ctx.textBaseline <- "middle"
-                  let x = model.CanvasInfo.Width * 0.5 - textWidth * 0.5
-                  let y = model.CanvasInfo.Height * 0.5
                   let height = p.Size * 1.1
   //                let mid = height * 0.5
-                  ctx.fillStyle <- !^ "rgba(255,255,255,0.7)"
+                  ctx.fillStyle <- !^ "white"
                   ctx.fillRect(p.X, p.Y - height * 0.5, textWidth, height);
                   ctx.fillStyle <- !^ "black"
                   ctx.fillText( p.Text, p.X, p.Y)
