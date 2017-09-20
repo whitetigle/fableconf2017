@@ -7,7 +7,9 @@ open Fable.Import.JS
 open System.Collections.Generic
 
 type CanvasInfo =
-    { Context: CanvasRenderingContext2D
+    {
+      TextContext: CanvasRenderingContext2D
+      DrawingContext: CanvasRenderingContext2D
       Width: float
       Height: float
     }
@@ -55,6 +57,9 @@ type PaintingKind =
   | FableCurtain of string
   | ShowTitle of string
 
+type Text = string
+type Probability = float
+
 type Screen =
   | Start
   | Transition
@@ -64,6 +69,7 @@ type Screen =
   | GoNextFrame
   | ClearScreen
   | NextScreen
+  | PopText of (Text*Probability) list
 
 type ScreenContent = {
   Text: string
@@ -86,10 +92,15 @@ type Msg =
   | KeyDown of code: float
   | NewFrame
   | Resize
+  | OnClick
 
 let subscribeToKeyEvents dispatch =
     window.addEventListener_keydown(fun ev ->
         KeyDown ev.keyCode |> dispatch; null)
+
+let subscribeToMouseClickEvents dispatch =
+    window.addEventListener_click(fun ev ->
+        OnClick |> dispatch; null)
 
 let subscribeToResize dispatch =
     window.addEventListener_resize(fun ev ->
@@ -174,234 +185,234 @@ let initModel (canvasinfo:CanvasInfo) =
           CanvasInfo=canvasinfo
           BackgroundAnimation = None
         }
-    model, [subscribeToKeyEvents; subscribeToFrames; subscribeToResize]
+    model, [subscribeToFrames; subscribeToResize; subscribeToMouseClickEvents]
+//    model, [subscribeToKeyEvents; subscribeToFrames; subscribeToResize; subscribeToMouseClickEvents]
 
 let update (msg: Msg) (model: Model) =
-    let model =
-        match msg with
-        | Resize -> model
 
-        | NewFrame ->
+  let proceedToNextScreen = {model with Screen=NextScreen }
 
-          let model =
-            match model.BackgroundAnimation with
-            | Some kind ->
-              match kind with
-              | Flows saturation->
+  let model =
+      match msg with
+      | Resize -> model
 
-                let l = model.Particles |> Seq.length
-                for i in 0..(l-1) do
-                  let p = model.Particles.[i]
-                  let coeff = p.PerlinCoeff
-                  let v = Perlin.perlin2( p.X * coeff, p.Y * coeff )
-                  let a = v * 2. * Math.PI + p.A
-                  let color = (sprintf "hsla(%f, %i%%, 80%%, 0.06)" (Math.floor(v * 360.)) saturation )
-                  p.X <- p.X + Math.cos(a) * p.Speed
-                  p.Y <-  p.Y + Math.sin(a) * p.Speed
-                  p.V <- v
-                  p.Life <-  p.Life - p.LifeDec
-                  p.Color <- color
+      | NewFrame ->
 
-                let particles = model.Particles |> Seq.filter(fun p -> p.Life > 0.)
-                if particles |> Seq.length <=0 then
-                  {model with Particles = [||]; BackgroundAnimation=None }
-                else
-                  model
+        let model =
+          match model.BackgroundAnimation with
+          | Some kind ->
+            match kind with
+            | Flows saturation->
 
-                (*
-                //drawing eights!!
-                let a = p.A + 0.01
-                let y = p.startY + Math.sin(a*2.) * Radius
-                let x = p.startX + Math.sin(a) * Radius * 2.5
-                {p with X = x; Y = y; V = v; A=a; Life = p.Life - LifeDec }
-                *)
+              let l = model.Particles |> Seq.length
+              for i in 0..(l-1) do
+                let p = model.Particles.[i]
+                let coeff = p.PerlinCoeff
+                let v = Perlin.perlin2( p.X * coeff, p.Y * coeff )
+                let a = v * 2. * Math.PI + p.A
+                let color = (sprintf "hsla(%f, %i%%, 80%%, 0.06)" (Math.floor(v * 360.)) saturation )
+                p.X <- p.X + Math.cos(a) * p.Speed
+                p.Y <-  p.Y + Math.sin(a) * p.Speed
+                p.V <- v
+                p.Life <-  p.Life - p.LifeDec
+                p.Color <- color
 
-                (*
-                let length = model.Particles
-                let particles =
-                  model.Particles
-                    |> Seq.map( fun p ->
-                      let coeff = p.PerlinCoeff
-                      let v = Perlin.perlin2( p.X * coeff, p.Y * coeff )
-
-                      // waves
-                      // source: https://josephg.com/perlin/3/p.js
-                      let a = v * 2. * Math.PI + p.A
-                      let color = (sprintf "hsla(%f, %i%%, 80%%, 0.06)" (Math.floor(v * 360.)) saturation )
-                      {p with X = p.X + Math.cos(a) * p.Speed; Y = p.Y + Math.sin(a) * p.Speed; V = v; Life = p.Life - p.LifeDec; Color=color }
-                    )
-                    |> Seq.filter( fun p -> p.Life > 0.)
-                    |> Seq.toArray
-                {model with Particles = particles }
-                *)
-
-              | FableCurtain title ->
-
-                let l = model.Particles |> Seq.length
-                for i in 0..(l-1) do
-                  let p = model.Particles.[i]
-                  let a = p.A + p.Speed
-                  p.X <- p.startX + Math.cos(a) * 3.0
-                  p.Y <- p.Y + p.Speed
-                  p.Life <- p.Life - p.LifeDec
-                  p.A = a
-                  |> ignore
-
-                (*
-                let particles =
-                  model.Particles
-                    |> List.map( fun p ->
-                      let a = p.A + p.Speed
-                      {p with X = p.startX + Math.cos(a) * 3.0;A=a;Y = p.Y + p.Speed;Life = p.Life - p.LifeDec }
-//                      {p with X = p.X + p.Speed; A=a; Y = p.startY; V = v; Life = p.Life - LifeDec;}
-                    )
-                    |> List.filter( fun p -> p.Life > 0.)
-                *)
-                let particles = model.Particles |> Seq.filter(fun p -> p.Life > 0.)
-                if particles |> Seq.length <=0 then
-                  {model with Screen=NextScreen; Particles = [||]; BackgroundAnimation=None }
-                else model
-//                  {model with Particles = particles }
-
-              | ShowTitle title ->
-
-                let l = model.Particles |> Seq.length
-                for i in 0..(l-1) do
-                  let p = model.Particles.[i]
-                  p.Life <- p.Life - p.LifeDec
-                  p.Alpha = if p.Alpha <1.0 then p.Alpha + 0.1 else 1.0
-                  |> ignore
-
+              let particles = model.Particles |> Seq.filter(fun p -> p.Life > 0.)
+              if particles |> Seq.length <=0 then
+                {model with Particles = [||]; BackgroundAnimation=None }
+              else
                 model
 
-            | None -> model
+              (*
+              //drawing eights!!
+              let a = p.A + 0.01
+              let y = p.startY + Math.sin(a*2.) * Radius
+              let x = p.startX + Math.sin(a) * Radius * 2.5
+              {p with X = x; Y = y; V = v; A=a; Life = p.Life - LifeDec }
+              *)
 
-          printfn "%A" model.Screen
+              (*
+              let length = model.Particles
+              let particles =
+                model.Particles
+                  |> Seq.map( fun p ->
+                    let coeff = p.PerlinCoeff
+                    let v = Perlin.perlin2( p.X * coeff, p.Y * coeff )
 
-          match model.Screen with
-          | NextScreen ->
-              let screen = model.Screens.[model.CurrentIndex]
-              {model with Screen=screen; CurrentIndex = model.CurrentIndex + 1}
+                    // waves
+                    // source: https://josephg.com/perlin/3/p.js
+                    let a = v * 2. * Math.PI + p.A
+                    let color = (sprintf "hsla(%f, %i%%, 80%%, 0.06)" (Math.floor(v * 360.)) saturation )
+                    {p with X = p.X + Math.cos(a) * p.Speed; Y = p.Y + Math.sin(a) * p.Speed; V = v; Life = p.Life - p.LifeDec; Color=color }
+                  )
+                  |> Seq.filter( fun p -> p.Life > 0.)
+                  |> Seq.toArray
+              {model with Particles = particles }
+              *)
 
-          | ClearScreen ->
-            let sat = int (Math.random() * 100.)
-            {model with Screen = LaunchPainting (Flows sat); Particles = [||]}
+            | FableCurtain title ->
 
-          | Start -> model
+              let l = model.Particles |> Seq.length
+              for i in 0..(l-1) do
+                let p = model.Particles.[i]
+                let a = p.A + p.Speed
+                p.X <- p.startX + Math.cos(a) * 3.0
+                p.Y <- p.Y + p.Speed
+                p.Life <- p.Life - p.LifeDec
+                p.A = a
+                |> ignore
 
-          | Transition ->
-            let particles =
-              let radius = 10
-              let max = (int model.CanvasInfo.Width / radius)
-              [|
-                  let p =
-                    {
-                      X=0.
-                      Y= -200.
-                      startX=0.
-                      startY= -200.
+              (*
+              let particles =
+                model.Particles
+                  |> List.map( fun p ->
+                    let a = p.A + p.Speed
+                    {p with X = p.startX + Math.cos(a) * 3.0;A=a;Y = p.Y + p.Speed;Life = p.Life - p.LifeDec }
+//                      {p with X = p.X + p.Speed; A=a; Y = p.startY; V = v; Life = p.Life - LifeDec;}
+                  )
+                  |> List.filter( fun p -> p.Life > 0.)
+              *)
+              let particles = model.Particles |> Seq.filter(fun p -> p.Life > 0.)
+              if particles |> Seq.length <=0 then
+                {model with Screen=NextScreen; Particles = [||]; BackgroundAnimation=None }
+              else model
+//                  {model with Particles = particles }
+
+            | ShowTitle title ->
+
+              let l = model.Particles |> Seq.length
+              for i in 0..(l-1) do
+                let p = model.Particles.[i]
+                p.Life <- p.Life - p.LifeDec
+                p.Alpha = if p.Alpha <1.0 then p.Alpha + 0.1 else 1.0
+                |> ignore
+
+              model
+
+          | None -> model
+
+        printfn "%A" model.Screen
+
+        match model.Screen with
+        | NextScreen ->
+            let screen = model.Screens.[model.CurrentIndex]
+            {model with Screen=screen; CurrentIndex = model.CurrentIndex + 1}
+
+        | ClearScreen ->
+          let sat = int (Math.random() * 100.)
+          {model with Screen = LaunchPainting (Flows sat); Particles = [||]}
+
+        | Start -> model
+
+        | Transition ->
+          let particles =
+            let radius = 10
+            let max = (int model.CanvasInfo.Width / radius)
+            [|
+                let p =
+                  {
+                    X=0.
+                    Y= -200.
+                    startX=0.
+                    startY= -200.
+                    A=0.//Math.random() * 1000.
+                    V=0.
+                    Life=50.//Math.random() * 1000.
+                    Speed=ParticleSpeed * 3.0
+                    Composition=Top
+                    Size=300.
+                    LifeDec=0.1
+                    PerlinCoeff=1.
+                    Color = "rgba(255, 255, 255, 0.05)"
+                    Alpha = 1.0
+                  }
+                yield
+                  p
+
+            |]
+
+          {model with Particles=particles; Screen = DoNothing; BackgroundAnimation=Some (FableCurtain "Fable 2017") }
+
+        | DoNothing -> model
+        | GoNextFrame -> { model with ScreenContent={Text=""}; Screen = DoNothing}
+        | LaunchPainting kind ->
+
+          let particles =
+            match kind with
+            | Flows saturation ->
+                let coeff = (100. + 100. * Math.random()) * 0.00001
+                //let coeff = 0.00125
+                printfn "%f" coeff
+                [|
+                  for i in 0..10000 do
+                    let x = Math.random() * model.CanvasInfo.Width
+                    let y = Math.random() * model.CanvasInfo.Height
+                    let v = Perlin.perlin2( x * coeff, y * coeff )
+                    let p = {
+                      X=x
+                      Y=y
+                      startX=x
+                      startY=y
                       A=0.//Math.random() * 1000.
                       V=0.
-                      Life=50.//Math.random() * 1000.
-                      Speed=ParticleSpeed * 3.0
-                      Composition=Top
-                      Size=300.
-                      LifeDec=0.1
-                      PerlinCoeff=1.
-                      Color = "rgba(255, 255, 255, 0.05)"
-                      Alpha = 1.0
+                      Life=10.//Math.random() * 1000.
+                      Speed=ParticleSpeed
+                      Composition=Bottom
+                      Size=1.5
+                      LifeDec=0.01
+                      PerlinCoeff=coeff// 0.00125
+                      Color=(sprintf "hsla(%f, %i%%, 80%%, 0.06)" (Math.floor(v * 360.)) saturation )
+                      Alpha=1.0
                     }
-                  yield
-                    p
-
-              |]
-
-            {model with Particles=particles; Screen = DoNothing; BackgroundAnimation=Some (FableCurtain "Fable 2017") }
-
-          | DoNothing -> model
-          | GoNextFrame -> { model with ScreenContent={Text=""}; Screen = DoNothing}
-          | LaunchPainting kind ->
-
-            let particles =
-              match kind with
-              | Flows saturation ->
-                  let coeff = (100. + 100. * Math.random()) * 0.00001
-                  //let coeff = 0.00125
-                  printfn "%f" coeff
-                  [|
-                    for i in 0..10000 do
-                      let x = Math.random() * model.CanvasInfo.Width
-                      let y = Math.random() * model.CanvasInfo.Height
-                      let v = Perlin.perlin2( x * coeff, y * coeff )
-                      let p = {
-                        X=x
-                        Y=y
-                        startX=x
-                        startY=y
-                        A=0.//Math.random() * 1000.
-                        V=0.
-                        Life=10.//Math.random() * 1000.
-                        Speed=ParticleSpeed
-                        Composition=Bottom
-                        Size=1.5
-                        LifeDec=0.01
-                        PerlinCoeff=coeff// 0.00125
-                        Color=(sprintf "hsla(%f, %i%%, 80%%, 0.06)" (Math.floor(v * 360.)) saturation )
-                        Alpha=1.0
-                      }
-                      yield
-                        p
-                  |]
-              | _ -> [||]
+                    yield
+                      p
+                |]
+            | _ -> [||]
 
 
-            let sat = int (Math.random() * 100.)
-            let ps = (model.Particles |> Seq.toList) @ (particles |> Seq.toList)
-            let psa = ps |> Seq.toArray
+          let sat = int (Math.random() * 100.)
+          let ps = (model.Particles |> Seq.toList) @ (particles |> Seq.toList)
+          let psa = ps |> Seq.toArray
 
-            {model with Particles=psa; Screen = NextScreen; BackgroundAnimation=Some (Flows sat) }
-          | DisplayText text ->
-            (*
-            let particles =
-              let radius = 10
-              let max = (int model.CanvasInfo.Width / radius)
-              [|
-                  let p =
-                    {
-                      X=0.
-                      Y= -200.
-                      startX=0.
-                      startY= -200.
-                      A=0.//Math.random() * 1000.
-                      V=0.
-                      Life=20.//Math.random() * 1000.
-                      Speed=ParticleSpeed * 3.0
-                      Composition=Top
-                      Size=300.
-                      LifeDec=0.5
-                      PerlinCoeff=1.
-                      Color = "rgba(255, 255, 255, 0.05)"
-                      Alpha = 0.01
-                    }
-                  yield
-                    p
+          {model with Particles=psa; Screen = NextScreen; BackgroundAnimation=Some (Flows sat) }
+        | DisplayText text ->
+          (*
+          let particles =
+            let radius = 10
+            let max = (int model.CanvasInfo.Width / radius)
+            [|
+                let p =
+                  {
+                    X=0.
+                    Y= -200.
+                    startX=0.
+                    startY= -200.
+                    A=0.//Math.random() * 1000.
+                    V=0.
+                    Life=20.//Math.random() * 1000.
+                    Speed=ParticleSpeed * 3.0
+                    Composition=Top
+                    Size=300.
+                    LifeDec=0.5
+                    PerlinCoeff=1.
+                    Color = "rgba(255, 255, 255, 0.05)"
+                    Alpha = 0.01
+                  }
+                yield
+                  p
 
-              |]
+            |]
 
-            // TODO: hopefully we can do concat operation way better!!
-            let ps = (model.Particles |> Seq.toList) @ (particles |> Seq.toList)
-            let psa = ps |> Seq.toArray
-            {model with Particles= psa; Screen = DoNothing; BackgroundAnimation=Some (ShowTitle text) }
-            *)
+          // TODO: hopefully we can do concat operation way better!!
+          let ps = (model.Particles |> Seq.toList) @ (particles |> Seq.toList)
+          let psa = ps |> Seq.toArray
+          {model with Particles= psa; Screen = DoNothing; BackgroundAnimation=Some (ShowTitle text) }
+          *)
 
-            { model with ScreenContent = {model.ScreenContent with Text=text}; Screen = GoNextFrame }
+          { model with ScreenContent = {model.ScreenContent with Text=text}; Screen = GoNextFrame }
 
-        | KeyDown code ->
-            match code with
-            | Keys.Up -> model
-            | Keys.Left -> model
-            | Keys.Right ->
-              model.Keys.Right <- true
-              {model with Screen=NextScreen }
-            | _ -> model
-    model, []
+      | OnClick -> proceedToNextScreen
+
+      | KeyDown code -> proceedToNextScreen
+
+  model, []

@@ -7,30 +7,39 @@ open Fable.Core.JsInterop
 open Fable.Import.Browser
 open Fable.Import.JS
 
-let [<Literal>] Ratio = 0.98
+let [<Literal>] Ratio = 1.0 // full screen
 
 let initCanvas() =
-    let canvas = document.getElementsByTagName_canvas().[0]
-    canvas.width <- window.innerWidth  * window.devicePixelRatio * Ratio
-    canvas.height <- window.innerHeight * window.devicePixelRatio * Ratio
-    let ctx = canvas.getContext_2d()
+
+    let drawingCanvas = document.getElementsByTagName_canvas().[0]
+    drawingCanvas.width <- window.innerWidth  * window.devicePixelRatio * Ratio
+    drawingCanvas.height <- window.innerHeight * window.devicePixelRatio * Ratio
+    let ctx = drawingCanvas.getContext_2d()
+
+    let textCanvas = document.getElementsByTagName_canvas().[1]
+    textCanvas.width <- drawingCanvas.width
+    textCanvas.height <- drawingCanvas.height
+    let tctx = textCanvas.getContext_2d()
 
     Perlin.seed(Math.random())
 
-    { Context = ctx
-      Width = canvas.width
-      Height = canvas.height
+    {
+      TextContext = tctx
+      DrawingContext = ctx
+      Width = drawingCanvas.width
+      Height = drawingCanvas.height
     }
 
 let render (model: Model) (dispatch: Msg->unit) =
     if model.Initialized then
-        let ctx = model.CanvasInfo.Context
 
         match model.Screen with
         | DisplayText text ->
 
+          let ctx = model.CanvasInfo.TextContext
+
           // draw text on top
-          ctx.globalCompositeOperation <- "source-over"
+//          ctx.globalCompositeOperation <- "source-over"
 
           // draw text at the center of the screen
           let fontSize = model.CanvasInfo.Width / 15.
@@ -41,8 +50,13 @@ let render (model: Model) (dispatch: Msg->unit) =
           ctx.fillText( text, model.CanvasInfo.Width * 0.5 - textWidth * 0.5, model.CanvasInfo.Height * 0.5)
 
         | ClearScreen ->
+
+          let ctx = model.CanvasInfo.TextContext
           ctx.clearRect(0.,0.,model.CanvasInfo.Width, model.CanvasInfo.Height)
+
         | _ ->
+
+          let ctx = model.CanvasInfo.DrawingContext
 
           model.Particles
             |> Seq.iter( fun p ->
