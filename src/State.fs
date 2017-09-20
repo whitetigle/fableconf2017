@@ -253,6 +253,7 @@ let initModel (canvasinfo:CanvasInfo) =
               AddLabel "BUT"
               AddLabel "NO MONEY"
 
+              ClearScreen TopScreen
               ClearScreen BottomScreen
               DisplayText "2011-2014"
               ClearScreen TopScreen
@@ -387,6 +388,7 @@ let initModel (canvasinfo:CanvasInfo) =
               AddLabel "Great libraries"
               AddLabel "Express a lot in a few commands"
               AddLabel "indentation based"
+              AddLabel "Excellent documentation"
               ClearScreen TopScreen
               DisplayText "NO SEMICOLONS!"
               AddLabel "crossplatform"
@@ -421,6 +423,65 @@ let initModel (canvasinfo:CanvasInfo) =
               AddLabel "Awesome-Fable web site"
               AddLabel "very clean source code if needed"
               AddLabel "very clean unit tests!"
+
+              ClearScreen TopScreen
+              ClearScreen BottomScreen // TODO: add random
+              DisplayText "Community!"
+              ClearScreen TopScreen
+              AddLabel "Community first!"
+              AddLabel "Open source!"
+              AddLabel "Gitter"
+              AddLabel "Slack"
+              AddLabel "Github"
+              AddLabel "Twitter"
+              AddLabel "Great People"
+              AddLabel "Funny People"
+              AddLabel "Funny looking People"
+              AddLabel "hmm..."
+              AddLabel "ok so..."
+
+              ClearScreen TopScreen
+              ClearScreen BottomScreen // TODO: add random
+              DisplayText "10 months of Fable later..."
+              ClearScreen TopScreen
+              AddLabel "3 pixi.js based projects"
+              AddLabel "1 local multiplayer game"
+              AddLabel "1 web site, winner of French JA network youth contest"
+              AddLabel "1 web site about Haïti environmental issues"
+              AddLabel "1 complete 'client-server' app"
+              AddLabel "so many side projects..."
+
+              ClearScreen TopScreen
+              ClearScreen BottomScreen // TODO: add random
+              DisplayText "In the end"
+              ClearScreen TopScreen
+              AddLabel "Develop faster?"
+              AddLabel "YES!"
+              AddLabel "Develop safer?"
+              AddLabel "YES!"
+              AddLabel "Less bugs?"
+              AddLabel "YES!"
+              ClearScreen TopScreen
+              AddLabel "Fable is young"
+              AddLabel "Promising technology"
+              AddLabel "Real Challenger in the JS transpiler competition"
+              AddLabel "Backed up by awesome people"
+              ClearScreen TopScreen
+              AddLabel "Me: ok kids, let's play together"
+              AddLabel "kids: you've finished your work already?"
+              AddLabel "Me: yes."
+              ClearScreen TopScreen
+              DisplayText "It's ready"
+              ClearScreen TopScreen
+              DisplayText "It's clean"
+              ClearScreen TopScreen
+              DisplayText "It just works..."
+
+              ClearScreen TopScreen
+              ClearScreen BottomScreen // TODO: add random
+              DisplayText "Thanks!"
+              ClearScreen TopScreen
+              DisplayText "Now let's have some great food!"
 
               (*
               ClearScreen
