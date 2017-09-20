@@ -219,6 +219,7 @@ let initModel (canvasinfo:CanvasInfo) =
               AddLabel "Met great people"
               AddLabel "and eventually..."
 
+              ClearScreen BottomScreen
               ClearScreen TopScreen
               DisplayText "2007-2010"
               ClearScreen TopScreen
@@ -234,7 +235,9 @@ let initModel (canvasinfo:CanvasInfo) =
               AddLabel "Too much things to do..."
               AddLabel "Failure"
               AddLabel "Failure"
+              AddLabel "Failure"
 
+              ClearScreen TopScreen
               ClearScreen BottomScreen
               DisplayText "Failure?"
               ClearScreen TopScreen
@@ -248,27 +251,176 @@ let initModel (canvasinfo:CanvasInfo) =
               AddLabel "Friends"
               AddLabel "Enjoying life"
               AddLabel "BUT"
-              AddLabel "no incomes"
+              AddLabel "NO MONEY"
 
               ClearScreen BottomScreen
               DisplayText "2011-2014"
               ClearScreen TopScreen
               DisplayText "Startup!"
-              AddLabel "Let's do it"
+              AddLabel "Let's do it!"
               AddLabel "Make video games again!"
-              AddLabel "sell them!"
-              AddLabel "get rich!"
+              AddLabel "Indie video Games!"
+              AddLabel "Yeah!"
               AddLabel "but take time"
               AddLabel "with my family"
               AddLabel "..."
               ClearScreen TopScreen
-              DisplayText "Economic failure"
+              DisplayText "Working hard"
               ClearScreen TopScreen
+              DisplayText "but..."
+              ClearScreen TopScreen
+              DisplayText "Running out of money!"
+              ClearScreen TopScreen
+              AddLabel "Failure"
+              AddLabel "Failure"
+              AddLabel "Failure"
 
+              ClearScreen BottomScreen
+              DisplayText "2014-now"
+              ClearScreen TopScreen
+              DisplayText "Work & Family"
+              ClearScreen TopScreen
+              AddLabel "Freelancing / consulting"
+              AddLabel "Teaching"
+              AddLabel "Learning"
+              AddLabel "Work with great people"
+              AddLabel "earn enough money"
+              ClearScreen TopScreen
+              AddLabel "Work hard"
+              AddLabel "Yet have time"
+              AddLabel "for family!"
+              AddLabel "for friends!"
+              AddLabel "for enjoying great wine"
+              AddLabel "in front of the beach"
+              AddLabel "Beautiful sunshines"
+              AddLabel "Stars in my eyes..."
+              ClearScreen TopScreen
+              AddLabel "HOW IS THAT POSSIBLE?"
 
               ClearScreen TopScreen
-              DisplayText "I want so many things!"
+              ClearScreen BottomScreen // TODO: add random
+              DisplayText "Changes for the best!"
+              ClearScreen TopScreen
+              AddLabel "XP: 15+ years"
+              AddLabel "Still fond of learning"
+              AddLabel "Still fond of solving problems"
+              AddLabel "Still fond of being a developer"
+              ClearScreen TopScreen
+              DisplayText "THINK & WORK BETTER"
+              AddLabel "Avoid vapor-projects"
+              AddLabel "Avoid projects with shallow requirements"
+              AddLabel "9 months max for any project"
+              AddLabel "be ready for any project"
+              ClearScreen TopScreen
+              DisplayText "DEVELOP"
+              AddLabel "Way Faster!"
+              AddLabel "Way Safer!"
+              AddLabel "Stable!"
+              AddLabel "Release bug free apps!"
+              AddLabel "...almost..."
+              ClearScreen TopScreen
+              DisplayText "BETTER TOOLS"
+              ClearScreen TopScreen
+              AddLabel "web apps"
+              AddLabel "desktop apps"
+              AddLabel "mobile apps"
+              AddLabel "IOT"
+              AddLabel "Cloud"
+              ClearScreen TopScreen
+              DisplayText "Projects 70% JS based"
+              ClearScreen TopScreen
+              AddLabel "Haxe"
+              AddLabel "Scala"
+              AddLabel "OOP!"
+              AddLabel "oop?"
+              AddLabel "oops"
+              AddLabel "..."
 
+              ClearScreen TopScreen
+              ClearScreen BottomScreen // TODO: add random
+              DisplayText "FUNCTIONAL!"
+              ClearScreen TopScreen
+              AddLabel "Scala?"
+              AddLabel "NO"
+              AddLabel "Clojure?"
+              AddLabel "NO"
+              AddLabel "Reason?"
+              AddLabel "NO"
+              AddLabel "Elm?"
+              AddLabel "NO"
+              AddLabel "SO WHAT??"
+
+              ClearScreen TopScreen
+              ClearScreen BottomScreen // TODO: add random
+              DisplayText "F# + Fable"
+              ClearScreen TopScreen
+              AddLabel "why?"
+              AddLabel "Great JS interop!"
+              AddLabel "Great gateway to .NET"
+              AddLabel "more things to add?"
+              ClearScreen TopScreen
+              DisplayText "DEFINITELY"
+
+              ClearScreen TopScreen
+              ClearScreen BottomScreen // TODO: add random
+              DisplayText "The Great Fable Stack"
+              ClearScreen TopScreen
+              AddLabel "F#"
+              AddLabel "Dotnet"
+              AddLabel "nodeJS"
+              AddLabel "Paket"
+              AddLabel "npm/yarn"
+              AddLabel "yarn"
+              AddLabel "babel"
+              AddLabel "webpack"
+              AddLabel "+"
+              AddLabel "IONIDE!"
+
+              ClearScreen TopScreen
+              ClearScreen BottomScreen // TODO: add random
+              DisplayText "F#?"
+              ClearScreen TopScreen
+              AddLabel "easy to learn functional with"
+              AddLabel "Easy to read and understand"
+              AddLabel "Easy to read and understand... LATER!"
+              AddLabel "Easy to refactor"
+              AddLabel "Great libraries"
+              AddLabel "Express a lot in a few commands"
+              AddLabel "indentation based"
+              ClearScreen TopScreen
+              DisplayText "NO SEMICOLONS!"
+              AddLabel "crossplatform"
+              AddLabel ".NET"
+              AddLabel "JS"
+
+              ClearScreen TopScreen
+              ClearScreen BottomScreen // TODO: add random
+              DisplayText "Fablulous tools!"
+              ClearScreen TopScreen
+              AddLabel "FAST SETUP"
+              AddLabel "Fable templates!"
+              AddLabel "Fable-Suave scaffolding!"
+              ClearScreen TopScreen
+              AddLabel "IONIDE + VSCODE"
+              AddLabel "easy to refactor"
+              AddLabel "explore project"
+              AddLabel "syntax highlighting"
+              AddLabel "error highlighting"
+              AddLabel "find usages"
+              AddLabel "..."
+              AddLabel "and so much more!"
+
+              ClearScreen TopScreen
+              ClearScreen BottomScreen // TODO: add random
+              DisplayText "Documentation"
+              ClearScreen TopScreen
+              AddLabel "Fable web site"
+              AddLabel "tutorials"
+              AddLabel "samples"
+              AddLabel "doc"
+              AddLabel "Awesome-Fable web site"
+              AddLabel "very clean source code if needed"
+              AddLabel "very clean unit tests!"
 
               (*
               ClearScreen
@@ -523,7 +675,7 @@ let update (msg: Msg) (model: Model) =
 
           let particles =
             [|
-                { EmptyParticle with LifeDec=0.1;Alpha=0.1; Size=90.; Text=text }
+                { EmptyParticle with LifeDec=0.1;Alpha=0.1; Size=150.; Text=text }
             |]
 
           // TODO: hopefully we can do concat operation way better!!
@@ -539,7 +691,7 @@ let update (msg: Msg) (model: Model) =
           let y = ymargin + ( model.CanvasInfo.Height - ymargin * 2.) * Math.random()
           let particles =
             [|
-                { EmptyParticle with LifeDec=0.1; Alpha=0.1; Size=50.; Text=text; X=x;Y=y }
+                { EmptyParticle with LifeDec=0.1; Alpha=0.1; Size=90.; Text=text; X=x;Y=y }
             |]
 
           // TODO: hopefully we can do concat operation way better!!
