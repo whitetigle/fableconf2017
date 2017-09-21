@@ -144,12 +144,14 @@ let render (model: Model) (dispatch: Msg->unit) =
                   ctx.font <- fontToRatio p.Size
                   let textWidth = ctx.measureText(p.Text).width
                   ctx.textBaseline <- "middle"
-                  let height = p.Size * 1.1
+                  let height = p.Size * 1.3
   //                let mid = height * 0.5
-                  ctx.fillStyle <- !^ "white"
-                  ctx.fillRect(p.X, p.Y - height * 0.5, textWidth, height);
                   ctx.fillStyle <- !^ "black"
-                  ctx.fillText( p.Text, p.X, p.Y)
+                  let y = p.Y - height * 0.5
+                  let y = if y < 0. then Math.random() * 150. else y
+                  ctx.fillRect(p.X, y-height * 0.5, textWidth, height);
+                  ctx.fillStyle <- !^ "white"
+                  ctx.fillText( p.Text, p.X, y)
 
                 | _ -> printfn ""
           )
