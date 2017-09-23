@@ -59,18 +59,6 @@ let EmptyParticle =
     Text = ""
   }
 
-[<RequireQualifiedAccess>]
-module Keys =
-    let [<Literal>] Space = 32.
-    let [<Literal>] Left = 37.
-    let [<Literal>] Up = 38.
-    let [<Literal>] Right = 39.
-
-type ControlKeys =
-    { mutable Up: bool
-      mutable Left: bool
-      mutable Right: bool }
-
 type Saturation = int
 type PaintingKind =
   | Flows of Saturation
@@ -107,7 +95,7 @@ type ScreenContent = {
 }
 
 type Model =
-    { Keys: ControlKeys
+    {
       Initialized: bool
       X : float
       BottomParticles : Particle []
@@ -121,39 +109,48 @@ type Model =
       TopAnimation: PaintingKind option
     }
 
-type Msg =
-  | KeyDown of code: float
-  | NewFrame
-  | Resize
-  | OnClick
+// Theese are our Elmish subscriptions
+module ElmishSubscriptions =
 
-let subscribeToKeyEvents dispatch =
-    window.addEventListener_keydown(fun ev ->
-        KeyDown ev.keyCode |> dispatch; null)
+  // We'll subscribe to the following Messages
+  type Msg =
+    | KeyDown of code: float
+    | NewFrame
+    | Resize
+    | OnClick
 
-let subscribeToMouseClickEvents dispatch =
-    window.addEventListener_click(fun ev ->
-        OnClick |> dispatch; null)
+  // Actually we won't be using keys, but let's add it for the fun
+  // TODO: add behaviour when pressing a key
+  let subscribeToKeyEvents dispatch =
+      window.addEventListener_keydown(fun ev ->
+          KeyDown ev.keyCode |> dispatch; null)
 
-let subscribeToResize dispatch =
-    window.addEventListener_resize(fun ev ->
-        Resize |> dispatch; null)
+  let subscribeToMouseClickEvents dispatch =
+      window.addEventListener_click(fun ev ->
+          OnClick |> dispatch; null)
 
-let subscribeToFrames dispatch =
-    let run =
-      let rec run (dt:float) =
-        window.requestAnimationFrame(FrameRequestCallback run) |> ignore
-        NewFrame |> dispatch
-      run
-    run 0.0
+  // Actually we won't be handling resize events
+  // TODO: add behaviour on resize event
+  let subscribeToResize dispatch =
+      window.addEventListener_resize(fun ev ->
+          Resize |> dispatch; null)
 
-let initModel (canvasinfo:CanvasInfo) =
-    let chapters =
-      [
-        ["Hello!"]
-      ]
+  // we ask for canvas updates every frame
+  // so that we can have our particles actually move
+  let subscribeToFrames dispatch =
+      let run =
+        let rec run (dt:float) =
+          window.requestAnimationFrame(FrameRequestCallback run) |> ignore
+          NewFrame |> dispatch
+        run
+      run 0.0
+
+// ---------------------------* INIT *---------------------------
+
+let init (canvasinfo:CanvasInfo) =
+
     let model =
-        { Keys = { Up=false; Left=false; Right=false }
+        {
           Initialized = true
           X= 0.
           BottomParticles=[||]
@@ -181,9 +178,11 @@ let initModel (canvasinfo:CanvasInfo) =
           BackgroundAnimation = None
           TopAnimation = None
         }
-    model, [subscribeToFrames; subscribeToResize; subscribeToMouseClickEvents]
-//    model, [subscribeToKeyEvents; subscribeToFrames; subscribeToResize; subscribeToMouseClickEvents]
+    model, [ElmishSubscriptions.subscribeToFrames; ElmishSubscriptions.subscribeToResize; ElmishSubscriptions.subscribeToMouseClickEvents]
 
+// ---------------------------* UPDATE *---------------------------
+
+open ElmishSubscriptions
 let update (msg: Msg) (model: Model) =
 
   let proceedToNextScreen = {model with Screen=NextScreen }
@@ -369,6 +368,6 @@ let update (msg: Msg) (model: Model) =
 
       | OnClick -> proceedToNextScreen
 
-      | KeyDown code -> proceedToNextScreen
+      | ElmishSubscriptions.KeyDown code -> proceedToNextScreen
 
   model, []

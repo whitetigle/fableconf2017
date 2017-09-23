@@ -34,7 +34,7 @@ let initCanvas() =
       ScaleFactor = width / BaseWidth
     }
 
-let render (model: Model) (dispatch: Msg->unit) =
+let render (model: Model) (dispatch: ElmishSubscriptions.Msg->unit) =
 
   let fontToRatio size =
     sprintf "%ipx Quicksand" (int (size * model.CanvasInfo.ScaleFactor))
