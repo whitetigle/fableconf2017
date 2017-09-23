@@ -18,20 +18,15 @@ type CanvasInfo =
 let [<Literal>] Radius = 200.
 let [<Literal>] ParticleSpeed = 2.
 
-type Composition =
-  | Top
-  | Bottom
-
+// Here mutability is used so that the rendering remains smooths
+// that's often the case with Javascript
 type Particle = {
-  startX:float
-  startY:float
   mutable X:float
   mutable Y:float
   mutable A:float
   mutable V:float
   mutable Life:float
   mutable Speed:float
-  mutable Composition: Composition
   mutable Size:float
   mutable LifeDec:float
   mutable PerlinCoeff:float
@@ -44,13 +39,10 @@ let EmptyParticle =
   {
     X=0.
     Y= 0.
-    startX=0.
-    startY=0.
     A=0.
     V=0.
     Life=0.
     Speed=0.
-    Composition=Top
     Size=0.
     LifeDec=0.
     PerlinCoeff=0.
@@ -297,13 +289,10 @@ let update (msg: Msg) (model: Model) =
                     let p = {
                       X=x
                       Y=y
-                      startX=x
-                      startY=y
                       A=0.//JS.Math.random() * 1000.
                       V=0.
                       Life=10.//JS.Math.random() * 1000.
                       Speed=ParticleSpeed
-                      Composition=Bottom
                       Size=1.5
                       LifeDec=0.01
                       PerlinCoeff=coeff// 0.00125
@@ -318,8 +307,7 @@ let update (msg: Msg) (model: Model) =
 
 
           let sat = int (JS.Math.random() * 100.)
-          let ps = (model.BottomParticles |> Seq.toList) @ (particles |> Seq.toList)
-          let psa = ps |> Seq.toArray
+          let psa = [model.BottomParticles;particles] |> Array.concat
 
           {model with BottomParticles=psa; Screen = NextScreen; BackgroundAnimation=Some (Flows sat) }
         | DisplayText text ->
@@ -330,8 +318,7 @@ let update (msg: Msg) (model: Model) =
             |]
 
           // TODO: hopefully we can do concat operation way better!!
-          let ps = (model.TopParticles |> Seq.toList) @ (particles |> Seq.toList)
-          let psa = ps |> Seq.toArray
+          let psa = [model.TopParticles;particles] |> Array.concat
           {model with TopParticles= psa; Screen = DoNothing; TopAnimation=Some ShowTitle }
 
         | AddLabel text ->

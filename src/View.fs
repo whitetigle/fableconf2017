@@ -7,7 +7,9 @@ open Fable.Core.JsInterop
 open Fable.Import.Browser
 open Fable.Import.JS
 
-let [<Literal>] Ratio = 1.0 // full screen
+// Our base Resolution,
+// scale will be updated according to the width of the actual screen
+// obviously it will work as long as they respect the same ration (currently 16/9)
 let [<Literal>] BaseWidth = 1920.
 
 let initCanvas() =
@@ -15,8 +17,8 @@ let initCanvas() =
     // initialise our Perlin noise
     Perlin.seed(Math.random())
 
-    let width = window.innerWidth  * window.devicePixelRatio * Ratio
-    let height = window.innerHeight * window.devicePixelRatio * Ratio
+    let width = window.innerWidth  * window.devicePixelRatio
+    let height = window.innerHeight * window.devicePixelRatio
 
     let drawingCanvas = document.getElementById("drawingcanvas") :?> HTMLCanvasElement
     drawingCanvas.width <- width
@@ -26,6 +28,8 @@ let initCanvas() =
     textCanvas.width <- width
     textCanvas.height <- height
 
+    // We actually need two canvases.
+    // One for text, one for our particles
     {
       TextContext = textCanvas.getContext_2d()
       DrawingContext = drawingCanvas.getContext_2d()
@@ -33,6 +37,8 @@ let initCanvas() =
       Height = height
       ScaleFactor = width / BaseWidth
     }
+
+// ---------------------------* ACTUAL UPDATED VIEW *---------------------------
 
 let render (model: Model) (dispatch: ElmishSubscriptions.Msg->unit) =
 
@@ -64,14 +70,6 @@ let render (model: Model) (dispatch: ElmishSubscriptions.Msg->unit) =
             if model.BackgroundAnimation.IsSome then
               let kind = model.BackgroundAnimation.Value
               let ctx = model.CanvasInfo.DrawingContext
-
-              match p.Composition with
-              | Top ->
-                // play anim on top of everything
-                ctx.globalCompositeOperation <- "source-over"
-              | Bottom ->
-                // play anim at the back
-                ctx.globalCompositeOperation <- "destination-over"
 
               match kind with
               | Flows sat ->
