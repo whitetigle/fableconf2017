@@ -42,22 +42,6 @@ let render (model: Model) (dispatch: Msg->unit) =
   if model.Initialized then
 
       match model.Screen with
-//        | DisplayText text ->
-
-        //let ctx = model.CanvasInfo.TextContext
-
-        // draw text on top
-//          ctx.globalCompositeOperation <- "source-over"
-
-        // draw text at the center of the screen
-        (*
-        let fontSize = model.CanvasInfo.Width / 15.
-        ctx.font <- sprintf "%ipx Quicksand" (int fontSize)
-        ctx.fillStyle <- !^ "rgba(255,255,255,0.7)"
-        let textWidth = ctx.measureText(text).width
-        ctx.textBaseline <- "middle"
-        ctx.fillText( text, model.CanvasInfo.Width * 0.5 - textWidth * 0.5, model.CanvasInfo.Height * 0.5)
-        *)
 
       | ClearScreen which ->
 
@@ -75,9 +59,6 @@ let render (model: Model) (dispatch: Msg->unit) =
 
         model.BottomParticles
           |> Seq.iter( fun p ->
-            //ctx.fillStyle <- !^ "red"
-            (*
-              *)
 
             // dynamic color using perlin noise
             if model.BackgroundAnimation.IsSome then
@@ -97,19 +78,6 @@ let render (model: Model) (dispatch: Msg->unit) =
 
                 ctx.fillStyle <- !^ p.Color
                 ctx.fillRect(p.X, p.Y, p.Size, p.Size)
-                (*
-
-              | FableCurtain ->
-
-                let ctx = model.CanvasInfo.DrawingContext
-                ctx.clearRect(0.,0.,model.CanvasInfo.Width, p.Y - p.Size*0.5)
-//                  ctx.fillStyle <- !^ "red"
-                ctx.fillStyle <- !^ p.Color
-                ctx.font <- fontToRatio p.Size
-                let textWidth = ctx.measureText(p.Text).width
-                ctx.fillText( p.Text, p.X + model.CanvasInfo.Width * 0.5 - textWidth * 0.5, p.Y)
-                *)
-
 
               | _ -> printfn ""
           )
@@ -125,7 +93,6 @@ let render (model: Model) (dispatch: Msg->unit) =
 
                   // draw text at the center of the screen
                   ctx.font <- fontToRatio p.Size
-  //                ctx.fillStyle <- !^ ( sprintf "rgba(255,255,255,%f)" p.Alpha)
                   let color = ( sprintf "rgba(255,255,255,%f)" p.Alpha)
                   printfn "%s" color
                   ctx.fillStyle <- !^ color
@@ -145,7 +112,6 @@ let render (model: Model) (dispatch: Msg->unit) =
                   let textWidth = ctx.measureText(p.Text).width
                   ctx.textBaseline <- "middle"
                   let height = p.Size * 1.3
-  //                let mid = height * 0.5
                   ctx.fillStyle <- !^ "black"
                   let y = p.Y - height * 0.5
                   let y = if y < 0. then Math.random() * 150. else y
