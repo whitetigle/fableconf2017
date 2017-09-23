@@ -80,7 +80,6 @@ type Screen =
   | GoNextFrame
   | ClearScreen of ScreenLayer
   | NextScreen
-  | PopText of (Text*Probability) []
 
 type ScreenContent = {
   Text: string
@@ -101,7 +100,11 @@ type Model =
       TopAnimation: PaintingKind option
     }
 
-// Theese are our Elmish subscriptions
+
+// ---------------------------* OUR EVENTS  *---------------------------
+
+
+// These are our Elmish subscriptions
 module ElmishSubscriptions =
 
   // We'll subscribe to the following Messages
@@ -154,14 +157,16 @@ let init (canvasinfo:CanvasInfo) =
               ClearScreen BottomScreen
               DisplayText "Fun With Canvas & Elmish"
               ClearScreen TopScreen
-              DisplayText "Highly Immutable"
+              AddLabel "Highly Immutable"
+              AddLabel "Enthusiastic"
+              AddLabel "Elmish Powered"
+              AddLabel "Fun Fable Presentation"
               ClearScreen TopScreen
-              DisplayText "Enthusiastic"
-              ClearScreen TopScreen
-              DisplayText "Elmish Powered"
-              ClearScreen TopScreen
-              DisplayText "Fun Fable Presentation"
-              ClearScreen TopScreen
+
+              //ClearScreen TopScreen // to clear text canvas
+              //ClearScreen BottomScreen // to clear drawing canvas
+              //Displaytext "mytext" // to display the text using a simple linear fade effect
+              //AddLabel "mytext" // to display the text using some black labels
 
             ]
           CurrentIndex = 0
@@ -216,21 +221,10 @@ let update (msg: Msg) (model: Model) =
           match model.TopAnimation with
           | Some kind ->
             match kind with
+
+            // fade in title animation
+            // update our alpha values to create the fadein effect
             | ShowTitle  ->
-
-              let l = model.TopParticles |> Seq.length
-              for i in 0..(l-1) do
-                let p = model.TopParticles.[i]
-                let alpha = if p.Alpha <=1.0 then p.Alpha + p.LifeDec else 1.0
-                p.Alpha <- alpha
-                if p.Alpha >= 1.0 then p.Life <- -1.0
-
-              let particles = model.TopParticles |> Seq.filter(fun p -> p.Life >= 0.)
-              if particles |> Seq.length <=0 then
-                {model with TopParticles = [||]; TopAnimation=None }
-              else model
-
-            | TextLabel  ->
 
               let l = model.TopParticles |> Seq.length
               for i in 0..(l-1) do
@@ -246,8 +240,6 @@ let update (msg: Msg) (model: Model) =
 
             |  _ -> model
           | None -> model
-
-        printfn "%A" model.Screen
 
         match model.Screen with
         | NextScreen ->
@@ -310,6 +302,8 @@ let update (msg: Msg) (model: Model) =
           let psa = [model.BottomParticles;particles] |> Array.concat
 
           {model with BottomParticles=psa; Screen = NextScreen; BackgroundAnimation=Some (Flows sat) }
+
+        // Display
         | DisplayText text ->
 
           let particles =
@@ -331,23 +325,6 @@ let update (msg: Msg) (model: Model) =
           let particles =
             [|
                 { EmptyParticle with LifeDec=10.; Size=90.; Text=text; X=x;Y=y }
-            |]
-
-          let psa = [model.TopParticles;particles] |> Array.concat
-          {model with TopParticles= psa; Screen = DoNothing; TopAnimation=Some TextLabel }
-
-        | PopText data ->
-
-          let particles =
-            [|
-              for i in 0..100 do
-                let rnd = System.Random()
-                let next = data.[rnd.Next(data.Length)]
-                let text = fst next
-                let x = model.CanvasInfo.Width * JS.Math.random()
-                let y = model.CanvasInfo.Height * JS.Math.random()
-                let p = { EmptyParticle with Life=JS.Math.random() * 100.; LifeDec=0.1;Alpha=0.0; Size=50.; Text=text; X=x;Y=y }
-                yield p
             |]
 
           let psa = [model.TopParticles;particles] |> Array.concat
