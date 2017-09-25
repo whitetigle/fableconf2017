@@ -15,7 +15,6 @@ type CanvasInfo =
       ScaleFactor: float
     }
 
-let [<Literal>] Radius = 200.
 let [<Literal>] ParticleSpeed = 2.
 
 // Here mutability is used so that the rendering remains smooths
