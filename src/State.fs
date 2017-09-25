@@ -150,11 +150,11 @@ let init (canvasinfo:CanvasInfo) =
           X= 0.
           BottomParticles=[||]
           TopParticles=[||]
-          Screen = Start
+          Screen = DisplayText "Click to continue"
           Screens =
             [
-              DisplayText "Click to start..."
               ClearScreen BottomScreen
+              ClearScreen TopScreen
               DisplayText "Fun With Canvas & Elmish"
               ClearScreen TopScreen
               AddLabel "Highly Immutable"
@@ -162,6 +162,7 @@ let init (canvasinfo:CanvasInfo) =
               AddLabel "Elmish Powered"
               AddLabel "Fun Fable Presentation"
               ClearScreen TopScreen
+              DisplayText "Add your own texts!"
 
               //ClearScreen TopScreen // to clear text canvas
               //ClearScreen BottomScreen // to clear drawing canvas
@@ -170,7 +171,7 @@ let init (canvasinfo:CanvasInfo) =
 
             ]
           CurrentIndex = 0
-          ScreenContent = { Text="Hello!"}
+          ScreenContent = { Text=""}
           CanvasInfo=canvasinfo
           BackgroundAnimation = None
           TopAnimation = None
@@ -180,20 +181,40 @@ let init (canvasinfo:CanvasInfo) =
 // ---------------------------* UPDATE *---------------------------
 
 open ElmishSubscriptions
+
+// keep only particles with some Life left
+let deleteDeadParticles particles =
+  particles |> Seq.filter(fun p -> p.Life >= 0.)
+
 let update (msg: Msg) (model: Model) =
 
   let proceedToNextScreen = {model with Screen=NextScreen }
 
+  // To update our model with use simple State machines
   let model =
       match msg with
+
+      // We don't change anything on Resize, but feel free to add some behaviour there
       | Resize -> model
 
+      // This is where we update our particles
+      // Every frame our Request animation frame loop sends us a NewFrame message
       | NewFrame ->
 
         let model =
           match model.BackgroundAnimation with
           | Some kind ->
+
             match kind with
+
+            // This is the source for the nice looking background animation
+            // the principle is simple
+            // we'll get the perlin value (v) for the current coordinates (X,Y) multiplied by a factor (PerlinCoeff)
+            // then our new angle will be calculated using v
+            // as well as the current colur hue
+            // and the X and Y values
+            // then a rect will be drawn at X and Y with the appropriate color
+            // we also decrease the life of the particle as well
             | Flows saturation->
 
               let l = model.BottomParticles |> Seq.length
@@ -209,7 +230,7 @@ let update (msg: Msg) (model: Model) =
                 p.Life <-  p.Life - p.LifeDec
                 p.Color <- color
 
-              let particles = model.BottomParticles |> Seq.filter(fun p -> p.Life > 0.)
+              let particles = deleteDeadParticles model.BottomParticles
               if particles |> Seq.length <=0 then
                 {model with BottomParticles = [||]; BackgroundAnimation=None }
               else
@@ -233,7 +254,20 @@ let update (msg: Msg) (model: Model) =
                 p.Alpha <- alpha
                 if p.Alpha >= 1.0 then p.Life <- -1.0
 
-              let particles = model.TopParticles |> Seq.filter(fun p -> p.Life >= 0.)
+              let particles = deleteDeadParticles model.TopParticles
+              if particles |> Seq.length <=0 then
+                {model with TopParticles = [||]; TopAnimation=None }
+              else model
+
+            // update our alpha values to create the fadein effect
+            | TextLabel ->
+
+              let l = model.TopParticles |> Seq.length
+              for i in 0..(l-1) do
+                let p = model.TopParticles.[i]
+                p.Life <- p.LifeDec
+
+              let particles = deleteDeadParticles model.TopParticles
               if particles |> Seq.length <=0 then
                 {model with TopParticles = [||]; TopAnimation=None }
               else model
@@ -242,12 +276,15 @@ let update (msg: Msg) (model: Model) =
           | None -> model
 
         match model.Screen with
+
+        // get the next screen animation kind
         | NextScreen ->
             if model.CurrentIndex < model.Screens.Length then
               let screen = model.Screens.[model.CurrentIndex]
               {model with Screen=screen; CurrentIndex = model.CurrentIndex + 1}
             else model
 
+        // kill our particles. Nothing more will be added to the display
         | ClearScreen which->
           match which with
           | TopScreen ->
@@ -257,16 +294,26 @@ let update (msg: Msg) (model: Model) =
 
         | Start -> model
 
+        // Spawn new Flow animation
         | StartBackground ->
           let sat = int (JS.Math.random() * 100.)
           {model with Screen = LaunchPainting (Flows sat); BackgroundAnimation=None }
 
+        // We have this nice simple DoNothing Message
+        // which will prevent us to repeat a state
+        // since our State Machine is called at 60 FPS,
+        // we don't want for instance to add 10K particles every frame
         | DoNothing -> model
+
         | GoNextFrame -> { model with ScreenContent={Text=""}; Screen = DoNothing}
+
+        // That's where we add our particles to our particles Arrays
         | LaunchPainting kind ->
 
           let particles =
             match kind with
+
+            // nice background animation
             | Flows saturation ->
                 let test = JS.Math.random() * 5. + 1.
                 let test = 100. * test
@@ -303,7 +350,7 @@ let update (msg: Msg) (model: Model) =
 
           {model with BottomParticles=psa; Screen = NextScreen; BackgroundAnimation=Some (Flows sat) }
 
-        // Display
+        // Large centered text (used for section titles)
         | DisplayText text ->
 
           let particles =
@@ -315,23 +362,32 @@ let update (msg: Msg) (model: Model) =
           let psa = [model.TopParticles;particles] |> Array.concat
           {model with TopParticles= psa; Screen = DoNothing; TopAnimation=Some ShowTitle }
 
+        // small black labeled texts popping up anywhere
         | AddLabel text ->
 
+          // note: we can do way better positionning than this ;)
           let xmargin = model.CanvasInfo.Width * 0.2
           let ymargin = model.CanvasInfo.Height * 0.2
           let x = model.CanvasInfo.Width * 0.1 + ( model.CanvasInfo.Width * 0.4) * JS.Math.random()
           let y = ( model.CanvasInfo.Height - ymargin * 2.) * JS.Math.random()
           let y = if y < 50. then 500. * JS.Math.random() else y
+
+          // note our LifeDec value which is very high!
+          // that's because we don't want to add these labels more than once
+          // so once they are actually drawn they will be deleted from our lists
+          // by the deleteDeadParticles function
           let particles =
             [|
-                { EmptyParticle with LifeDec=10.; Size=90.; Text=text; X=x;Y=y }
+                { EmptyParticle with LifeDec=100.; Life=0.1; Size=90.; Text=text; X=x;Y=y }
             |]
 
           let psa = [model.TopParticles;particles] |> Array.concat
           {model with TopParticles= psa; Screen = DoNothing; TopAnimation=Some TextLabel }
 
+      // Elmish Power: easy to understand, isnt'it?
       | OnClick -> proceedToNextScreen
 
+      // Elmish Power: easy to understand, isnt'it?
       | ElmishSubscriptions.KeyDown code -> proceedToNextScreen
 
   model, []

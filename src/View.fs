@@ -66,12 +66,14 @@ let render (model: Model) (dispatch: ElmishSubscriptions.Msg->unit) =
         model.BottomParticles
           |> Seq.iter( fun p ->
 
-            // dynamic color using perlin noise
             if model.BackgroundAnimation.IsSome then
               let kind = model.BackgroundAnimation.Value
               let ctx = model.CanvasInfo.DrawingContext
 
               match kind with
+
+              // YES! this is the actual code for the nice looking background animation
+              // only 2 tiny lines of code
               | Flows sat ->
 
                 ctx.fillStyle <- !^ p.Color
@@ -105,7 +107,7 @@ let render (model: Model) (dispatch: ElmishSubscriptions.Msg->unit) =
 
                 | TextLabel ->
 
-                  // draw text at the center of the screen
+                  // draw text anywhere
                   ctx.font <- fontToRatio p.Size
                   let textWidth = ctx.measureText(p.Text).width
                   ctx.textBaseline <- "middle"
