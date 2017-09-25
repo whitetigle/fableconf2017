@@ -8,9 +8,9 @@ This is the project hosting my FableConf 2017 presentation files and projects
 
 It's a simple canvas based presentation.
 The background animation is running using some Perlin noise based values
-Whereas the texts are displayed on their own canvas.
+whereas the texts are displayed on their own canvas.
 
-Feeel free to read and hack the source code. It's easy to read and well documented (hopefully).
+Feel free to read and hack the source code. It's easy to read and well documented (hopefully).
 
 Underlying tech stack:
 

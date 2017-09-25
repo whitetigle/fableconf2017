@@ -60,12 +60,6 @@ type PaintingKind =
 type Text = string
 type Probability = float
 
-type Layer = {
-  Context : CanvasRenderingContext2D
-  Animation : PaintingKind option
-  Particles : Particle []
-}
-
 type ScreenLayer =
   | TopScreen
   | BottomScreen
@@ -114,8 +108,6 @@ module ElmishSubscriptions =
     | Resize
     | OnClick
 
-  // Actually we won't be using keys, but let's add it for the fun
-  // TODO: add behaviour when pressing a key
   let subscribeToKeyEvents dispatch =
       window.addEventListener_keydown(fun ev ->
           KeyDown ev.keyCode |> dispatch; null)
@@ -388,6 +380,6 @@ let update (msg: Msg) (model: Model) =
       | OnClick -> proceedToNextScreen
 
       // Elmish Power: easy to understand, isnt'it?
-      | ElmishSubscriptions.KeyDown code -> proceedToNextScreen
+      | KeyDown code -> proceedToNextScreen
 
   model, []
