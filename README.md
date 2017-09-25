@@ -2,7 +2,23 @@
 
 This is the project hosting my FableConf 2017 presentation files and projects
 
-## Requirements
+![Presentation sample](https://raw.githubusercontent.com/whitetigle/fableconf2017/master/images/app.png)
+
+## How does it work?
+
+It's a simple canvas based presentation.
+The background animation is running using some Perlin noise based values
+Whereas the texts are displayed on their own canvas.
+
+Feeel free to read and hack the source code. It's easy to read and well documented (hopefully).
+
+Underlying tech stack:
+
+* [Elmish](https://fable-elmish.github.io/elmish/)
+* [noisejs](https://github.com/josephg/noisejs)
+
+
+# Build requirements
 
 * [dotnet SDK](https://www.microsoft.com/net/download/core) 2.0 or higher
 * [node.js](https://nodejs.org) 6.11 or higher
