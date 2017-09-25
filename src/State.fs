@@ -136,6 +136,7 @@ module ElmishSubscriptions =
 
 let init (canvasinfo:CanvasInfo) =
 
+    // this is our starting model
     let model =
         {
           Initialized = true
@@ -155,6 +156,7 @@ let init (canvasinfo:CanvasInfo) =
               AddLabel "Fun Fable Presentation"
               ClearScreen TopScreen
               DisplayText "Add your own texts!"
+              ClearScreen BottomScreen
 
               //ClearScreen TopScreen // to clear text canvas
               //ClearScreen BottomScreen // to clear drawing canvas
@@ -168,17 +170,26 @@ let init (canvasinfo:CanvasInfo) =
           BackgroundAnimation = None
           TopAnimation = None
         }
-    model, [ElmishSubscriptions.subscribeToFrames; ElmishSubscriptions.subscribeToResize; ElmishSubscriptions.subscribeToMouseClickEvents]
+
+    let subscriptions =
+      [
+        ElmishSubscriptions.subscribeToFrames;
+        ElmishSubscriptions.subscribeToKeyEvents;
+        ElmishSubscriptions.subscribeToMouseClickEvents
+      ]
+
+    model, subscriptions
 
 // ---------------------------* UPDATE *---------------------------
 
 open ElmishSubscriptions
 
-// keep only particles with some Life left
-let deleteDeadParticles particles =
-  particles |> Seq.filter(fun p -> p.Life >= 0.)
-
 let update (msg: Msg) (model: Model) =
+
+  // keep only particles with some Life left
+  let deleteDeadParticles particles =
+    particles |> Seq.filter(fun p -> p.Life >= 0.)
+
 
   let proceedToNextScreen = {model with Screen=NextScreen }
 
