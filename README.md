@@ -15,6 +15,7 @@ Feel free to read and hack the source code. It's easy to read and well documente
 
 Underlying tech stack:
 
+* [Fable](http://fable.io/docs/getting-started.html) (obviously :wink:)
 * [Elmish](https://fable-elmish.github.io/elmish/)
 * [noisejs](https://github.com/josephg/noisejs)
 
