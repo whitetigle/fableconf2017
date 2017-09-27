@@ -7,8 +7,9 @@ This is the project hosting my FableConf 2017 presentation files and projects
 ## How does it work?
 
 It's a simple canvas based presentation.
-The background animation is running using some Perlin noise based values
-whereas the texts are displayed on their own canvas.
+
+- One canvas is used to draw the background animation
+- whereas the texts are displayed on another canvas positionned on top of the first  (please check index.html to see css style)
 
 Feel free to read and hack the source code. It's easy to read and well documented (hopefully).
 
